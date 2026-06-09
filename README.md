@@ -39,11 +39,19 @@ im SAP Data Dictionary anlegt und aktiviert.
 Für jede Zeile der CSV-Datei wird:
 
 1. eine **Domäne** mit Datentyp, Anzahl Stellen, Dezimalstellen, Vorzeichen
-   und Kleinbuchstaben-Kennzeichen angelegt (`DDIF_DOMA_PUT`),
-2. ein **Datenelement** unter **gleichem Namen** angelegt, das auf diese
+   und Kleinbuchstaben-Kennzeichen angelegt (`DDIF_DOMA_PUT`). Die Domäne
+   trägt den **gleichen Namen** wie das Datenelement, ist dessen Typ und
+   erhält **dieselbe Beschreibung wie das Datenelement, mit vorangestelltem
+   „Domäne"** (z. B. Datenelement „Kundennummer" → Domäne „Domäne Kundennummer").
+2. ein **Datenelement** unter gleichem Namen angelegt, das auf diese
    Domäne verweist, inkl. Kurzbeschreibung und den vier Feldbezeichnungen
    (`DDIF_DTEL_PUT`),
 3. beides in den Objektkatalog (TADIR) eingetragen und **aktiviert**.
+
+Alle Längenangaben (Stellen, Dezimalstellen, Ausgabelänge sowie die Längen
+der Feldbezeichnungen) werden über den **ALPHA-Eingabe-Exit**
+(`CONVERSION_EXIT_ALPHA_INPUT`) rechtsbündig mit führenden Nullen übertragen,
+wie es die DDIC-Strukturen `DD01V`/`DD04V` erwarten.
 
 ## Aufbau der CSV-Datei
 

@@ -320,12 +320,14 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
   ls_dd01v-domname    = ps_csv-name.
   ls_dd01v-ddlanguage = sy-langu.
   ls_dd01v-datatype   = ps_csv-datentyp.
-  ls_dd01v-leng       = ps_csv-stellen.
-  ls_dd01v-decimals   = ps_csv-dezimal.
-  ls_dd01v-outputlen  = lv_outlen.
+  " Groessen mit Alpha-Exit (fuehrende Nullen) uebertragen
+  PERFORM f_alpha USING ps_csv-stellen CHANGING ls_dd01v-leng.
+  PERFORM f_alpha USING ps_csv-dezimal CHANGING ls_dd01v-decimals.
+  PERFORM f_alpha USING lv_outlen      CHANGING ls_dd01v-outputlen.
   ls_dd01v-lowercase  = ps_csv-lowercase.
   ls_dd01v-signflag   = ps_csv-vorzeichen.
-  ls_dd01v-ddtext     = ps_csv-bezeichnung.
+  " Domaenenbeschreibung = Beschreibung des Datenelements mit Praefix 'Domäne'
+  ls_dd01v-ddtext     = |Domäne { ps_csv-bezeichnung }|.
 
   CALL FUNCTION 'DDIF_DOMA_PUT'
     EXPORTING
@@ -389,11 +391,16 @@ FORM f_create_dtel USING    ps_csv TYPE ty_csv_line
   ls_dd04v-scrtext_l  = ps_csv-feld_lang.
   ls_dd04v-reptext    = ps_csv-feld_ueber.
 
-  " Laengen der Feldbezeichnungen
-  ls_dd04v-scrlen1 = strlen( ps_csv-feld_kurz ).
-  ls_dd04v-scrlen2 = strlen( ps_csv-feld_mittel ).
-  ls_dd04v-scrlen3 = strlen( ps_csv-feld_lang ).
-  ls_dd04v-headlen = strlen( ps_csv-feld_ueber ).
+  " Laengen der Feldbezeichnungen mit Alpha-Exit (fuehrende Nullen)
+  DATA lv_len TYPE c LENGTH 6.
+  lv_len = strlen( ps_csv-feld_kurz ).
+  PERFORM f_alpha USING lv_len CHANGING ls_dd04v-scrlen1.
+  lv_len = strlen( ps_csv-feld_mittel ).
+  PERFORM f_alpha USING lv_len CHANGING ls_dd04v-scrlen2.
+  lv_len = strlen( ps_csv-feld_lang ).
+  PERFORM f_alpha USING lv_len CHANGING ls_dd04v-scrlen3.
+  lv_len = strlen( ps_csv-feld_ueber ).
+  PERFORM f_alpha USING lv_len CHANGING ls_dd04v-headlen.
 
   CALL FUNCTION 'DDIF_DTEL_PUT'
     EXPORTING
@@ -519,5 +526,21 @@ FORM f_calc_outputlen USING    ps_csv  TYPE ty_csv_line
   IF pv_out IS INITIAL.
     pv_out = ps_csv-stellen.
   ENDIF.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form F_ALPHA - Wert ueber den ALPHA-Eingabe-Exit konvertieren
+*& (rechtsbuendig mit fuehrenden Nullen), wie es die DDIC-Laengenfelder
+*& (LENG, DECIMALS, OUTPUTLEN, SCRLEN*, HEADLEN) erwarten.
+*&---------------------------------------------------------------------*
+FORM f_alpha USING    pv_in  TYPE clike
+             CHANGING pv_out TYPE clike.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+    EXPORTING
+      input  = pv_in
+    IMPORTING
+      output = pv_out.
 
 ENDFORM.
