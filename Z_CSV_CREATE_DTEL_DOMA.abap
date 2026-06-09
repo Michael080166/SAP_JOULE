@@ -175,6 +175,10 @@ FORM f_read_csv.
     CONDENSE: gs_csv-name, gs_csv-datentyp,
               gs_csv-vorzeichen, gs_csv-lowercase.
 
+    " Groessen mit Alpha-Exit (fuehrende Nullen) aufbereiten
+    PERFORM f_alpha USING gs_csv-stellen CHANGING gs_csv-stellen.
+    PERFORM f_alpha USING gs_csv-dezimal CHANGING gs_csv-dezimal.
+
     " Vorzeichen / Kleinbuchstaben normalisieren ('X' oder leer)
     IF gs_csv-vorzeichen CA 'xX1'.
       gs_csv-vorzeichen = 'X'.
