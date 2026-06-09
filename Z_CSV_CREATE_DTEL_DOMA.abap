@@ -24,7 +24,7 @@
 *& Eine fuehrende Kopfzeile kann ueber den Parameter P_HEAD uebersprungen
 *& werden.
 *&---------------------------------------------------------------------*
-REPORT z_csv_create_dtel_doma.
+REPORT z_csv_create_dtel_doma LINE-SIZE 255.
 
 TYPE-POOLS: abap.
 
@@ -240,8 +240,8 @@ FORM f_process.
     PERFORM f_create_domain USING gs_csv CHANGING lv_ok lv_msg.
     IF lv_ok = abap_false.
       ADD 1 TO lv_cnt_err.
-      WRITE: / icon_red_light AS ICON, gs_csv-name,
-               'Domaene:', lv_msg.
+      WRITE: / icon_red_light AS ICON, gs_csv-name, 'Domaene:'.
+      WRITE: /4 lv_msg.
       CONTINUE.
     ENDIF.
 
@@ -249,8 +249,8 @@ FORM f_process.
     PERFORM f_create_dtel USING gs_csv CHANGING lv_ok lv_msg.
     IF lv_ok = abap_false.
       ADD 1 TO lv_cnt_err.
-      WRITE: / icon_red_light AS ICON, gs_csv-name,
-               'Datenelement:', lv_msg.
+      WRITE: / icon_red_light AS ICON, gs_csv-name, 'Datenelement:'.
+      WRITE: /4 lv_msg.
       CONTINUE.
     ENDIF.
 
@@ -346,7 +346,8 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
       OTHERS            = 6.
   IF sy-subrc <> 0.
     pv_ok = abap_false.
-    pv_msg = |DDIF_DOMA_PUT subrc={ sy-subrc }|.
+    PERFORM f_sysmsg CHANGING pv_msg.
+    pv_msg = |DDIF_DOMA_PUT subrc={ sy-subrc } { pv_msg }|.
     RETURN.
   ENDIF.
 
@@ -366,7 +367,8 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
       OTHERS      = 3.
   IF sy-subrc <> 0.
     pv_ok = abap_false.
-    pv_msg = |DDIF_DOMA_ACTIVATE subrc={ sy-subrc }|.
+    PERFORM f_sysmsg CHANGING pv_msg.
+    pv_msg = |DDIF_DOMA_ACTIVATE subrc={ sy-subrc } { pv_msg }|.
   ENDIF.
 
 ENDFORM.
@@ -419,7 +421,8 @@ FORM f_create_dtel USING    ps_csv TYPE ty_csv_line
       OTHERS            = 6.
   IF sy-subrc <> 0.
     pv_ok = abap_false.
-    pv_msg = |DDIF_DTEL_PUT subrc={ sy-subrc }|.
+    PERFORM f_sysmsg CHANGING pv_msg.
+    pv_msg = |DDIF_DTEL_PUT subrc={ sy-subrc } { pv_msg }|.
     RETURN.
   ENDIF.
 
@@ -439,7 +442,8 @@ FORM f_create_dtel USING    ps_csv TYPE ty_csv_line
       OTHERS      = 3.
   IF sy-subrc <> 0.
     pv_ok = abap_false.
-    pv_msg = |DDIF_DTEL_ACTIVATE subrc={ sy-subrc }|.
+    PERFORM f_sysmsg CHANGING pv_msg.
+    pv_msg = |DDIF_DTEL_ACTIVATE subrc={ sy-subrc } { pv_msg }|.
   ENDIF.
 
 ENDFORM.
@@ -546,5 +550,21 @@ FORM f_alpha USING    pv_in  TYPE clike
       input  = pv_in
     IMPORTING
       output = pv_out.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form F_SYSMSG - die zuletzt gesetzte Systemmeldung als Text liefern.
+*& So wird der konkrete Grund einer DDIC-Ablehnung sichtbar (statt nur
+*& des SUBRC), z.B. welches Feld bzw. welches Format beanstandet wurde.
+*&---------------------------------------------------------------------*
+FORM f_sysmsg CHANGING pv_text TYPE string.
+
+  CLEAR pv_text.
+  IF sy-msgid IS NOT INITIAL AND sy-msgno IS NOT INITIAL.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
+            INTO pv_text.
+  ENDIF.
 
 ENDFORM.
