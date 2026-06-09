@@ -59,6 +59,7 @@ PARAMETERS: p_file  TYPE string LOWER CASE OBLIGATORY.
 PARAMETERS: p_sep   TYPE c LENGTH 1 DEFAULT ';'.
 PARAMETERS: p_head  AS CHECKBOX DEFAULT 'X'.
 PARAMETERS: p_dev   TYPE tadir-devclass DEFAULT '$TMP'.
+PARAMETERS: p_order TYPE e070-trkorr.          " Transportauftrag
 PARAMETERS: p_test  AS CHECKBOX DEFAULT 'X'.   " nur pruefen, nicht anlegen
 SELECTION-SCREEN END OF BLOCK b1.
 
@@ -79,6 +80,36 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
   READ TABLE lt_files INTO ls_file INDEX 1.
   IF sy-subrc = 0.
     p_file = ls_file-filename.
+  ENDIF.
+
+*----------------------------------------------------------------------*
+* F4-Hilfe fuer Transportauftrag (Workbench-Auftrag)
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_order.
+  CALL FUNCTION 'TRINT_ORDER_CHOICE'
+    EXPORTING
+      wi_order_type          = 'K'   " Workbench-Auftrag
+      wi_task_type           = 'S'   " Entwicklung/Korrektur
+    IMPORTING
+      we_order               = p_order
+    EXCEPTIONS
+      no_correction_selected = 1
+      display_mode           = 2
+      object_append_error    = 3
+      recursive_call         = 4
+      wrong_order_type       = 5
+      OTHERS                 = 6.
+  IF sy-subrc <> 0.
+    CLEAR p_order.
+  ENDIF.
+
+*----------------------------------------------------------------------*
+* Pruefung des Selektionsbildes
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN.
+  " Bei einem nicht lokalen Paket ist ein Transportauftrag erforderlich
+  IF p_test = abap_false AND p_dev <> '$TMP' AND p_order IS INITIAL.
+    MESSAGE 'Bitte einen Transportauftrag angeben (Paket ungleich $TMP)' TYPE 'E'.
   ENDIF.
 
 *----------------------------------------------------------------------*
@@ -314,7 +345,7 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
   ENDIF.
 
   " In Transportauftrag / Paket eintragen
-  PERFORM f_tadir_insert USING 'DOMA' ps_csv-name CHANGING pv_ok pv_msg.
+  PERFORM f_register_object USING 'DOMA' ps_csv-name CHANGING pv_ok pv_msg.
   IF pv_ok = abap_false.
     RETURN.
   ENDIF.
@@ -382,7 +413,7 @@ FORM f_create_dtel USING    ps_csv TYPE ty_csv_line
   ENDIF.
 
   " In Transportauftrag / Paket eintragen
-  PERFORM f_tadir_insert USING 'DTEL' ps_csv-name CHANGING pv_ok pv_msg.
+  PERFORM f_register_object USING 'DTEL' ps_csv-name CHANGING pv_ok pv_msg.
   IF pv_ok = abap_false.
     RETURN.
   ENDIF.
@@ -403,57 +434,51 @@ FORM f_create_dtel USING    ps_csv TYPE ty_csv_line
 ENDFORM.
 
 *&---------------------------------------------------------------------*
-*& Form F_TADIR_INSERT - Objektkatalogeintrag erzeugen
+*& Form F_REGISTER_OBJECT - Objektkatalogeintrag (TADIR) erzeugen UND
+*&                          Objekt dem Transportauftrag zuordnen.
+*& RS_CORR_INSERT legt den TADIR-Eintrag an und haengt das Objekt bei
+*& transportfaehigem Paket an den uebergebenen Auftrag (P_ORDER) an.
+*& Bei lokalem Paket ($TMP) erfolgt keine Transportzuordnung.
 *&---------------------------------------------------------------------*
-FORM f_tadir_insert USING    pv_type TYPE c
-                             pv_name TYPE rollname
-                    CHANGING pv_ok   TYPE abap_bool
-                             pv_msg  TYPE string.
+FORM f_register_object USING    pv_class TYPE c          " 'DOMA' / 'DTEL'
+                                pv_name  TYPE rollname
+                       CHANGING pv_ok    TYPE abap_bool
+                                pv_msg   TYPE string.
 
-  DATA: lv_obj  TYPE trobjtype,
-        lv_name TYPE trobj_name.
+  DATA: lv_obj   TYPE e071-obj_name,
+        lv_class TYPE e071-object,
+        lv_order TYPE e070-trkorr.
 
-  pv_ok   = abap_true.
-  lv_obj  = pv_type.
-  lv_name = pv_name.
+  pv_ok    = abap_true.
+  lv_obj   = pv_name.
+  lv_class = pv_class.
+  lv_order = p_order.
 
-  CALL FUNCTION 'TR_TADIR_INTERFACE'
+  CALL FUNCTION 'RS_CORR_INSERT'
     EXPORTING
-      wi_test_modus                  = abap_false
-      wi_tadir_pgmid                 = 'R3TR'
-      wi_tadir_object                = lv_obj
-      wi_tadir_obj_name              = lv_name
-      wi_tadir_devclass              = p_dev
-      wi_set_genflag                 = ' '
+      object              = lv_obj
+      object_class        = lv_class
+      devclass            = p_dev
+      master_language     = sy-langu
+      mode                = 'I'
+      global_lock         = abap_true
+      korrnum             = lv_order
+    IMPORTING
+      korrnum             = lv_order
     EXCEPTIONS
-      tadir_entry_not_existing       = 1
-      tadir_entry_ill_type           = 2
-      no_systemname                  = 3
-      no_systemtype                  = 4
-      original_system_conflict       = 5
-      object_reserved_for_devclass   = 6
-      object_exists_global           = 7
-      object_exists_local            = 8
-      object_is_distributed          = 9
-      obj_specification_not_unique   = 10
-      no_authorization_to_delete     = 11
-      devclass_not_existing          = 12
-      simultanious_set_remove_repair = 13
-      order_missing                  = 14
-      no_modification_of_head_syst   = 15
-      pgmid_object_not_allowed       = 16
-      masterlanguage_not_specified   = 17
-      devclass_not_specified         = 18
-      specify_owner_unique           = 19
-      loc_priv_objs_no_repair        = 20
-      gtadir_not_reached             = 21
-      object_locked_for_order        = 22
-      change_of_class_not_allowed    = 23
-      no_change_from_sap_to_tmp      = 24
-      OTHERS                         = 25.
-  IF sy-subrc <> 0 AND sy-subrc <> 7 AND sy-subrc <> 8.
+      cancelled           = 1
+      permission_failure  = 2
+      unknown_objectclass = 3
+      OTHERS              = 4.
+  IF sy-subrc <> 0.
     pv_ok  = abap_false.
-    pv_msg = |TR_TADIR_INTERFACE subrc={ sy-subrc }|.
+    pv_msg = |RS_CORR_INSERT subrc={ sy-subrc }|.
+    RETURN.
+  ENDIF.
+
+  " gewaehlten/erzeugten Auftrag fuer die weiteren Objekte uebernehmen
+  IF p_order IS INITIAL AND lv_order IS NOT INITIAL.
+    p_order = lv_order.
   ENDIF.
 
 ENDFORM.

@@ -77,10 +77,15 @@ Beispieldaten siehe [`beispiel_datenelemente.csv`](beispiel_datenelemente.csv).
 | P_SEP     | Trennzeichen (Default `;`)                           |
 | P_HEAD    | Erste Zeile ist Kopfzeile und wird übersprungen      |
 | P_DEV     | Entwicklungsklasse / Paket (Default `$TMP`)          |
+| P_ORDER   | Transportauftrag, dem die Objekte zugeordnet werden (F4-Hilfe vorhanden) |
 | P_TEST    | Testlauf – es wird nur geprüft, **nichts angelegt**  |
 
 > **Hinweis:** Zum tatsächlichen Anlegen muss `P_TEST` deaktiviert werden.
-> Bei einem Paket ungleich `$TMP` ist ein Transportauftrag erforderlich.
+> Bei einem Paket ungleich `$TMP` ist ein Transportauftrag (`P_ORDER`)
+> erforderlich. Über die F4-Hilfe lässt sich ein Workbench-Auftrag auswählen;
+> Domäne und Datenelement werden per `RS_CORR_INSERT` diesem Auftrag
+> zugeordnet. Bleibt `P_ORDER` leer und das Paket ist transportfähig, fragt
+> das System den Auftrag interaktiv ab.
 
 ## Hinweise
 
