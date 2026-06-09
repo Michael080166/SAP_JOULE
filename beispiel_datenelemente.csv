@@ -1,0 +1,7 @@
+NAME;BEZEICHNUNG;DATENTYP;STELLEN;DEZIMALSTELLEN;VORZEICHEN;KLEINBUCHSTABEN;FELD_KURZ;FELD_MITTEL;FELD_LANG;FELD_UEBERSCHRIFT
+ZKUNDE_ID;Kundennummer;NUMC;10;0;;;KdNr;Kundennr.;Kundennummer;Kundennummer
+ZKUNDE_NAME;Name des Kunden;CHAR;40;0;;X;Name;Kundenname;Name des Kunden;Kundenname
+ZBETRAG;Betrag in Hauswaehrung;CURR;15;2;X;;Betrag;Betrag;Betrag in HW;Betrag
+ZMENGE;Bestellmenge;QUAN;13;3;;;Menge;Bestellmenge;Bestellmenge;Menge
+ZANLAGEDAT;Anlagedatum;DATS;8;0;;;Datum;Anlagedatum;Anlagedatum;Anlagedatum
+ZAKTIV;Kennzeichen aktiv;CHAR;1;0;;;Aktiv;Aktiv-Kz;Kennzeichen aktiv;Aktiv

@@ -26,3 +26,65 @@ This repo currently contains only baseline files. Typical next steps:
 ## Contributing
 
 Open an issue or pull request to propose changes.
+
+---
+
+# Z_CSV_CREATE_DTEL_DOMA
+
+ABAP-Report, der aus einer CSV-Datei Domänen und gleichnamige Datenelemente
+im SAP Data Dictionary anlegt und aktiviert.
+
+## Was macht das Programm?
+
+Für jede Zeile der CSV-Datei wird:
+
+1. eine **Domäne** mit Datentyp, Anzahl Stellen, Dezimalstellen, Vorzeichen
+   und Kleinbuchstaben-Kennzeichen angelegt (`DDIF_DOMA_PUT`),
+2. ein **Datenelement** unter **gleichem Namen** angelegt, das auf diese
+   Domäne verweist, inkl. Kurzbeschreibung und den vier Feldbezeichnungen
+   (`DDIF_DTEL_PUT`),
+3. beides in den Objektkatalog (TADIR) eingetragen und **aktiviert**.
+
+## Aufbau der CSV-Datei
+
+Trennzeichen ist standardmäßig `;` (über Parameter `P_SEP` änderbar). Eine
+optionale Kopfzeile kann über `P_HEAD` übersprungen werden.
+
+| # | Spalte           | Bedeutung                                   |
+|---|------------------|---------------------------------------------|
+| 1 | NAME             | Name von Datenelement **und** Domäne        |
+| 2 | BEZEICHNUNG      | Kurzbeschreibung (DDTEXT)                    |
+| 3 | DATENTYP         | z. B. CHAR, NUMC, DEC, CURR, QUAN, DATS, INT4 |
+| 4 | STELLEN          | Anzahl Stellen (Länge)                      |
+| 5 | DEZIMALSTELLEN   | Anzahl Dezimalstellen                       |
+| 6 | VORZEICHEN       | `X` = mit Vorzeichen, sonst leer            |
+| 7 | KLEINBUCHSTABEN  | `X` = Kleinbuchstaben erlaubt, sonst leer   |
+| 8 | FELD_KURZ        | Feldbezeichnung kurz (max. 10)              |
+| 9 | FELD_MITTEL      | Feldbezeichnung mittel (max. 20)            |
+| 10| FELD_LANG        | Feldbezeichnung lang (max. 40)              |
+| 11| FELD_UEBERSCHRIFT| Feldbezeichnung Überschrift (max. 55)       |
+
+Sind die Spalten 8–11 leer, werden die Feldbezeichnungen aus der
+Bezeichnung (Spalte 2) abgeleitet.
+
+Beispieldaten siehe [`beispiel_datenelemente.csv`](beispiel_datenelemente.csv).
+
+## Selektionsbild
+
+| Parameter | Bedeutung                                            |
+|-----------|------------------------------------------------------|
+| P_FILE    | Pfad zur CSV-Datei (F4-Hilfe vorhanden)              |
+| P_SEP     | Trennzeichen (Default `;`)                           |
+| P_HEAD    | Erste Zeile ist Kopfzeile und wird übersprungen      |
+| P_DEV     | Entwicklungsklasse / Paket (Default `$TMP`)          |
+| P_TEST    | Testlauf – es wird nur geprüft, **nichts angelegt**  |
+
+> **Hinweis:** Zum tatsächlichen Anlegen muss `P_TEST` deaktiviert werden.
+> Bei einem Paket ungleich `$TMP` ist ein Transportauftrag erforderlich.
+
+## Hinweise
+
+- Die Namen müssen im Kundennamensraum liegen (beginnen mit `Y`, `Z` oder `/`).
+- Das Programm muss im SAP-System (SE38/SE80) angelegt und gegen ein
+  Frontend mit GUI ausgeführt werden, da die CSV über `GUI_UPLOAD` gelesen wird.
+- Die Ausgabelänge der Domäne wird je nach Datentyp automatisch berechnet.
