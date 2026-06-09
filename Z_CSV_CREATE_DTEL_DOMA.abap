@@ -312,14 +312,10 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
                               pv_msg TYPE string.
 
   DATA: ls_dd01v  TYPE dd01v,
-        lv_name   TYPE ddobjname,
-        lv_outlen TYPE dd01v-outputlen.
+        lv_name   TYPE ddobjname.
 
   pv_ok  = abap_true.
   lv_name = ps_csv-name.
-
-  " Ausgabelaenge bestimmen
-  PERFORM f_calc_outputlen USING ps_csv CHANGING lv_outlen.
 
   ls_dd01v-domname    = ps_csv-name.
   ls_dd01v-ddlanguage = sy-langu.
@@ -327,7 +323,10 @@ FORM f_create_domain USING    ps_csv TYPE ty_csv_line
   " Groessen mit Alpha-Exit (fuehrende Nullen) uebertragen
   PERFORM f_alpha USING ps_csv-stellen CHANGING ls_dd01v-leng.
   PERFORM f_alpha USING ps_csv-dezimal CHANGING ls_dd01v-decimals.
-  PERFORM f_alpha USING lv_outlen      CHANGING ls_dd01v-outputlen.
+  " Ausgabelaenge NICHT selbst setzen: OUTPUTLEN = 0 lassen, damit DDIC sie
+  " bei der Aktivierung typgerecht berechnet (wichtig u.a. fuer CURR/QUAN/DEC,
+  " wo Tausender-Trennzeichen, Dezimalkomma und Vorzeichen einfliessen).
+  CLEAR ls_dd01v-outputlen.
   ls_dd01v-lowercase  = ps_csv-lowercase.
   ls_dd01v-signflag   = ps_csv-vorzeichen.
   " Domaenenbeschreibung = Beschreibung des Datenelements mit Praefix 'Domäne'
@@ -494,45 +493,6 @@ FORM f_register_object USING    pv_class TYPE c          " 'DOMA' / 'DTEL'
   " gewaehlten/erzeugten Auftrag fuer die weiteren Objekte uebernehmen
   IF p_order IS INITIAL AND lv_order IS NOT INITIAL.
     p_order = lv_order.
-  ENDIF.
-
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form F_CALC_OUTPUTLEN - Ausgabelaenge der Domaene bestimmen
-*&---------------------------------------------------------------------*
-FORM f_calc_outputlen USING    ps_csv  TYPE ty_csv_line
-                      CHANGING pv_out  TYPE dd01v-outputlen.
-
-  " Standard: Ausgabelaenge = Anzahl Stellen
-  pv_out = ps_csv-stellen.
-
-  CASE ps_csv-datentyp.
-    WHEN 'DEC' OR 'CURR' OR 'QUAN'.
-      " Stellen + ggf. Dezimaltrennzeichen + Vorzeichen
-      pv_out = ps_csv-stellen.
-      IF ps_csv-dezimal > 0.
-        pv_out = pv_out + 1.            " Dezimaltrennzeichen
-      ENDIF.
-      IF ps_csv-vorzeichen = 'X'.
-        pv_out = pv_out + 1.            " Vorzeichen
-      ENDIF.
-    WHEN 'DATS'.
-      pv_out = 10.                      " TT.MM.JJJJ
-    WHEN 'TIMS'.
-      pv_out = 8.                       " HH:MM:SS
-    WHEN 'INT1'.
-      pv_out = 3.
-    WHEN 'INT2'.
-      pv_out = 6.
-    WHEN 'INT4'.
-      pv_out = 11.
-    WHEN OTHERS.
-      pv_out = ps_csv-stellen.
-  ENDCASE.
-
-  IF pv_out IS INITIAL.
-    pv_out = ps_csv-stellen.
   ENDIF.
 
 ENDFORM.

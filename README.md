@@ -48,10 +48,14 @@ Für jede Zeile der CSV-Datei wird:
    (`DDIF_DTEL_PUT`),
 3. beides in den Objektkatalog (TADIR) eingetragen und **aktiviert**.
 
-Alle Längenangaben (Stellen, Dezimalstellen, Ausgabelänge sowie die Längen
-der Feldbezeichnungen) werden über den **ALPHA-Eingabe-Exit**
+Die Längenangaben (Stellen, Dezimalstellen sowie die Längen der
+Feldbezeichnungen) werden über den **ALPHA-Eingabe-Exit**
 (`CONVERSION_EXIT_ALPHA_INPUT`) rechtsbündig mit führenden Nullen übertragen,
-wie es die DDIC-Strukturen `DD01V`/`DD04V` erwarten.
+wie es die DDIC-Strukturen `DD01V`/`DD04V` erwarten. Die **Ausgabelänge
+(`OUTPUTLEN`)** wird bewusst **nicht** selbst gesetzt, sondern von DDIC bei der
+Aktivierung typgerecht berechnet – nur so stimmt sie z. B. für `CURR`/`QUAN`/`DEC`
+(Tausender-Trennzeichen, Dezimalkomma, Vorzeichen). Eine selbst gesetzte,
+abweichende Ausgabelänge führt sonst zu einem Format-/Konsistenzfehler.
 
 ## Aufbau der CSV-Datei
 
@@ -100,4 +104,5 @@ Beispieldaten siehe [`beispiel_datenelemente.csv`](beispiel_datenelemente.csv).
 - Die Namen müssen im Kundennamensraum liegen (beginnen mit `Y`, `Z` oder `/`).
 - Das Programm muss im SAP-System (SE38/SE80) angelegt und gegen ein
   Frontend mit GUI ausgeführt werden, da die CSV über `GUI_UPLOAD` gelesen wird.
-- Die Ausgabelänge der Domäne wird je nach Datentyp automatisch berechnet.
+- Die Ausgabelänge der Domäne wird von DDIC bei der Aktivierung automatisch
+  und typgerecht ermittelt (`OUTPUTLEN` wird vom Programm nicht vorgegeben).
