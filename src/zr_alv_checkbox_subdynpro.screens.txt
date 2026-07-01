@@ -1,0 +1,47 @@
+*&---------------------------------------------------------------------*
+*& Dynpro-Ablauflogik (Flow Logic) fuer ZR_ALV_CHECKBOX_SUBDYNPRO
+*&
+*& Diese Ablauflogik im Screen Painter (SE51) hinterlegen. Die eigent-
+*& lichen Screen-Elemente (Subscreen-Area, Custom-Control) werden im
+*& Layout des Screen Painter angelegt.
+*&---------------------------------------------------------------------*
+
+*======================================================================*
+* Dynpro 0100  -  Rahmen-Dynpro (Normal)
+*   Layout:  Subscreen-Bereich mit Namen  SUB_AREA
+*======================================================================*
+PROCESS BEFORE OUTPUT.
+  MODULE status_0100.
+  CALL SUBSCREEN sub_area INCLUDING sy-repid gv_subscr.
+
+PROCESS AFTER INPUT.
+  CALL SUBSCREEN sub_area.
+  MODULE user_command_0100.
+
+* Feldzuordnung im Screen Painter:
+*   OK-Code-Feld des Dynpros = GV_OKCODE
+
+
+*======================================================================*
+* Dynpro 0110  -  Subdynpro (Dynpro-Typ = Subscreen)
+*   Layout:  Custom-Control mit Namen  CC_ALV
+*======================================================================*
+PROCESS BEFORE OUTPUT.
+  MODULE pbo_0110.
+
+PROCESS AFTER INPUT.
+  MODULE pai_0110.
+
+
+*======================================================================*
+* GUI-Status  STATUS_0100  (SE41)
+*   Empfohlene Funktionscodes (Drucktasten / Menue):
+*     SAVE    -  Sichern      (Icon ICON_SYSTEM_SAVE)
+*     ADD     -  Zeile hinzu  (Icon ICON_INSERT_ROW)
+*     DELETE  -  Zeile loesch.(Icon ICON_DELETE_ROW)
+*     BACK    -  Zurueck (F3)
+*     EXIT    -  Beenden (Shift+F3)
+*     CANCEL  -  Abbrechen (F12)
+*
+* GUI-Titel  TITLE_0100 :  'ALV-Pflege: Checkbox + 3 Strings'
+*======================================================================*
