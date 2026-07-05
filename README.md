@@ -1,13 +1,8 @@
 # SAP_JOULE
 
 A starting point for a project related to **SAP Joule**, SAP's generative-AI
-assistant (copilot). This repository was initialized with a baseline structure
-and is ready to be built out.
-
-## Status
-
-🚧 Early scaffold — no application code yet. The direction (language, framework,
-and scope) is still open.
+assistant (copilot). This repository provides a clean Python baseline that is
+ready to be built out.
 
 ## What is SAP Joule?
 
@@ -15,13 +10,52 @@ and scope) is still open.
 is SAP's AI copilot, embedded across SAP's enterprise applications to help users
 get work done through natural-language interaction.
 
+## Project layout
+
+```
+.
+├── src/sap_joule/      # application package
+│   ├── __init__.py
+│   ├── __main__.py     # `python -m sap_joule` entry point
+│   └── config.py       # environment-driven configuration
+├── tests/              # pytest test suite
+├── pyproject.toml      # project metadata + tooling (ruff, pytest)
+├── .env.example        # sample environment variables
+└── .gitignore
+```
+
 ## Getting started
 
-This repo currently contains only baseline files. Typical next steps:
+Requires Python 3.10+.
 
-1. Decide the stack (e.g. Python, TypeScript/Node, Java).
-2. Add project tooling (dependency manifest, linter, formatter, tests).
-3. Build out the application or integration code.
+```bash
+# create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+
+# install the package with dev tooling
+pip install -e ".[dev]"
+
+# copy and fill in environment variables
+cp .env.example .env
+
+# run the CLI
+python -m sap_joule
+```
+
+## Development
+
+```bash
+ruff check .        # lint
+ruff format .       # format
+pytest              # run tests
+```
+
+## Configuration
+
+Configuration is read from environment variables (see `.env.example`). Nothing
+in this baseline contacts a live SAP endpoint yet — `config.py` simply loads and
+validates settings so integration code has a single place to start from.
 
 ## Contributing
 
