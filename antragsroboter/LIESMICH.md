@@ -264,7 +264,14 @@ Im Ordner `uebungsportal` liegen zwei Übungsumgebungen:
   **nicht** freigabereif — daran seht ihr, ob der Roboter sie ausläßt, statt
   sie durchzuwinken.
 
-Starten:
+**Starten ohne jedes Werkzeug:** Datei
+`uebungsportal/wohnweb/anmeldung.html` doppelklicken. Damit die Erweiterung
+dort mitarbeitet, muss unter `edge://extensions` → *Details* einmalig
+**Dateizugriff zulassen** eingeschaltet werden — das gilt nur für das
+Übungsportal, am echten Portal wird es nicht gebraucht.
+
+Wer lieber einen kleinen Webserver nimmt (nicht nötig, aber näher am
+Echtbetrieb):
 
 ```bash
 npx http-server -p 8899 uebungsportal
@@ -372,6 +379,16 @@ eintragen müsst. Wer das enger fassen will, ersetzt in
 Adresse, z. B. `https://portal.example/*`.
 
 ---
+
+## Braucht es sonst noch etwas?
+
+**Nein.** Keine Installation, kein Python, kein Node, kein npm, keine
+Administratorrechte, keine Freigabe durch die IT. Das ausgelieferte Paket
+besteht aus HTML, CSS, JavaScript und drei Symbolbildern — mehr führt der
+Browser nicht aus.
+
+Node und Playwright braucht ausschließlich der Ordner `pruefungen/`, und der
+ist im Versandpaket bewusst **nicht** enthalten.
 
 ## Aufbau
 

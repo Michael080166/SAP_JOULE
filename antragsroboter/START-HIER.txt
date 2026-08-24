@@ -45,15 +45,22 @@ Das Bedienfeld erscheint als Leiste neben dem Portal.
 3. VORHER GEFAHRLOS UEBEN
 --------------------------------------------------------------------
 Im Ordner "uebungsportal" liegt ein Nachbau zum Ausprobieren. Er
-verhaelt sich wie das echte Portal, gibt aber nichts frei.
+verhaelt sich wie das echte Portal - samt Hinweiskasten, Statusspalte
+und den zwei Pruefmerkmalen -, gibt aber nichts frei.
 
-  - Ordner "uebungsportal" oeffnen
-  - Datei  wohnweb/anmeldung.html  in Chrome ziehen
+  - Datei  uebungsportal\wohnweb\anmeldung.html  doppelklicken
+    (oder ins Browserfenster ziehen)
 
-Hinweis: Damit die Erweiterung dort mitarbeitet, muss in
-chrome://extensions beim Antragsroboter "Dateizugriff zulassen"
-eingeschaltet sein. Alternativ das Uebungsportal ueber einen lokalen
-Webserver oeffnen.
+EINMALIG noetig, damit die Erweiterung dort mitarbeitet:
+  edge://extensions  ->  beim Antragsroboter auf "Details"
+  ->  "Dateizugriff zulassen" einschalten
+
+Das gilt NUR fuer das Uebungsportal. Am echten Portal wird das nicht
+gebraucht.
+
+Zwei der zwoelf Uebungsfaelle sind absichtlich nicht freigabereif -
+daran sehen Sie, dass der Roboter sie auslaesst statt sie
+durchzuwinken.
 
 Bitte machen Sie das einmal durch, BEVOR Sie echte Antraege anfassen.
 

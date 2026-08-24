@@ -13,7 +13,8 @@
     "downloads"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "file:///*"
   ],
   "background": {
     "service_worker": "hintergrund.js"
@@ -21,7 +22,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "<all_urls>",
+        "file:///*"
       ],
       "js": [
         "inhalt.js"
