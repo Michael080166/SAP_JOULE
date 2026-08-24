@@ -1,0 +1,338 @@
+/* Antragsroboter - Panel-Gestaltung
+   Auf schmale Seitenleisten ausgelegt (ca. 360-420 px) und auf lange
+   Arbeitssitzungen: ruhige Farben, klare Statusfarben, nichts blinkt. */
+
+:root {
+  --grund:    #ffffff;
+  --flaeche:  #f8fafc;
+  --rand:     #e2e8f0;
+  --text:     #0f172a;
+  --gedaempft:#64748b;
+  --blau:     #2563eb;
+  --blauDunkel:#1d4ed8;
+  --gruen:    #16a34a;
+  --gruenHell:#dcfce7;
+  --rot:      #dc2626;
+  --rotHell:  #fee2e2;
+  --gelb:     #d97706;
+  --gelbHell: #fef3c7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grund:    #0f172a;
+    --flaeche:  #1e293b;
+    --rand:     #334155;
+    --text:     #f1f5f9;
+    --gedaempft:#94a3b8;
+    --blau:     #3b82f6;
+    --blauDunkel:#2563eb;
+    --gruen:    #22c55e;
+    --gruenHell:#14532d;
+    --rot:      #ef4444;
+    --rotHell:  #7f1d1d;
+    --gelb:     #f59e0b;
+    --gelbHell: #78350f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 13px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--grund);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ------------------------------- Kopf ------------------------------- */
+.kopf {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 10px 12px;
+  border-bottom: 1px solid var(--rand);
+  background: var(--flaeche);
+  flex: none;
+}
+.marke { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.marke img { border-radius: 5px; }
+
+.kachel {
+  font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px;
+  white-space: nowrap; letter-spacing: .01em;
+}
+.kachel.ruhe    { background: var(--rand);      color: var(--gedaempft); }
+.kachel.laeuft  { background: var(--gruenHell); color: var(--gruen); }
+.kachel.pause   { background: var(--gelbHell);  color: var(--gelb); }
+.kachel.fehler  { background: var(--rotHell);   color: var(--rot); }
+.kachel.aufnahme{ background: var(--rotHell);   color: var(--rot); }
+
+/* ------------------------------ Reiter ------------------------------ */
+.reiter {
+  display: flex; border-bottom: 1px solid var(--rand);
+  background: var(--flaeche); flex: none; overflow-x: auto;
+}
+.reiterKnopf {
+  flex: 1 0 auto; padding: 9px 8px; border: 0; background: none; cursor: pointer;
+  font: 600 12px "Segoe UI", system-ui, sans-serif; color: var(--gedaempft);
+  border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.reiterKnopf:hover { color: var(--text); }
+.reiterKnopf.aktiv { color: var(--blau); border-bottom-color: var(--blau); }
+
+main { flex: 1; overflow-y: auto; padding: 12px; }
+.tafel { display: none; }
+.tafel.aktiv { display: block; }
+
+/* --------------------------- Grundelemente -------------------------- */
+.hilfe { color: var(--gedaempft); font-size: 12px; margin: 4px 0 10px; }
+.hilfe code {
+  background: var(--flaeche); border: 1px solid var(--rand);
+  padding: 1px 4px; border-radius: 4px; font-size: 11px;
+}
+.feldbez {
+  display: block; font-weight: 600; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--gedaempft); margin: 12px 0 4px;
+}
+
+textarea, input[type=text], input[type=number] {
+  width: 100%; padding: 8px 9px; border: 1px solid var(--rand); border-radius: 7px;
+  font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+  background: var(--grund); color: var(--text); resize: vertical;
+}
+textarea { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+textarea:focus, input:focus { outline: 2px solid var(--blau); outline-offset: -1px; border-color: var(--blau); }
+
+.knopfreihe { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; align-items: center; }
+.knopfreihe.gross { margin: 14px 0; }
+.knopfreihe input[type=text] { flex: 1; min-width: 120px; }
+
+button {
+  font: 600 12px "Segoe UI", system-ui, sans-serif; cursor: pointer;
+  padding: 8px 13px; border-radius: 7px; border: 1px solid transparent;
+  transition: background .12s;
+}
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.haupt  { background: var(--blau); color: #fff; }
+button.haupt:not(:disabled):hover { background: var(--blauDunkel); }
+button.neben  { background: var(--flaeche); color: var(--text); border-color: var(--rand); }
+button.neben:not(:disabled):hover { border-color: var(--gedaempft); }
+button.gefahr { background: var(--rotHell); color: var(--rot); border-color: transparent; }
+button.gefahr:not(:disabled):hover { filter: brightness(.95); }
+button.klein  { padding: 6px 10px; font-size: 11px; }
+button.gross  { padding: 11px 18px; font-size: 13px; flex: 1; }
+
+.versteckt { display: none !important; }
+
+.hinweisZeile { font-size: 12px; color: var(--gedaempft); min-height: 16px; margin-top: 6px; }
+.hinweisZeile.gut    { color: var(--gruen); font-weight: 600; }
+.hinweisZeile.schlecht { color: var(--rot); font-weight: 600; }
+
+.warnung {
+  background: var(--gelbHell); color: var(--gelb); border-radius: 8px;
+  padding: 10px 12px; font-size: 12px; font-weight: 600; margin-bottom: 12px;
+  border: 1px solid currentColor;
+}
+.warnung.schwer { background: var(--rotHell); color: var(--rot); }
+
+/* ------------------------------ Anträge ----------------------------- */
+.ernte {
+  border: 1px solid var(--rand); border-radius: 9px; padding: 12px;
+  background: var(--flaeche); margin-bottom: 12px;
+}
+.ernte > b { font-size: 13px; }
+.ernte .hilfe { margin: 4px 0 8px; }
+select {
+  width: 100%; padding: 8px 9px; border: 1px solid var(--rand); border-radius: 7px;
+  font: 13px "Segoe UI", system-ui, sans-serif; background: var(--grund); color: var(--text);
+}
+.klappe {
+  border: 1px solid var(--rand); border-radius: 9px; padding: 0 12px; margin-bottom: 12px;
+}
+.klappe > summary {
+  cursor: pointer; padding: 10px 0; font-weight: 600; font-size: 12px;
+  color: var(--gedaempft); list-style-position: inside;
+}
+.klappe > summary:hover { color: var(--text); }
+.klappe[open] > summary { border-bottom: 1px solid var(--rand); margin-bottom: 10px; }
+.ernteZeile {
+  display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px;
+  border-bottom: 1px solid var(--rand); font-size: 12px; cursor: pointer;
+}
+.ernteZeile:last-child { border-bottom: 0; }
+.ernteZeile:hover { background: var(--flaeche); }
+.ernteZeile input { margin-top: 2px; flex: none; width: 15px; height: 15px; accent-color: var(--blau); }
+.ernteZeile .kennung { font-weight: 700; }
+.ernteZeile .rest { color: var(--gedaempft); font-size: 11px; overflow-wrap: anywhere; }
+.ernteZeile.doppelt { background: var(--gelbHell); }
+.ernteZeile.doppelt .kennung { color: var(--gelb); }
+
+.zusammenfassung {
+  background: var(--flaeche); border: 1px solid var(--rand); border-radius: 8px;
+  padding: 9px 11px; font-size: 12px; font-weight: 600; margin: 10px 0;
+}
+.zusammenfassung.leer { color: var(--gedaempft); font-weight: 400; }
+
+.tabellenhuelle { max-height: 320px; overflow: auto; border: 1px solid var(--rand); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  position: sticky; top: 0; background: var(--flaeche); text-align: left;
+  padding: 7px 8px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .03em; color: var(--gedaempft); border-bottom: 1px solid var(--rand);
+}
+tbody td { padding: 6px 8px; border-bottom: 1px solid var(--rand); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+td.nr { color: var(--gedaempft); font-variant-numeric: tabular-nums; }
+td.meldung { color: var(--gedaempft); font-size: 11px; overflow-wrap: anywhere; }
+
+.status {
+  display: inline-block; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.status.offen   { background: var(--rand);      color: var(--gedaempft); }
+.status.laeuft  { background: var(--gelbHell);  color: var(--gelb); }
+.status.ok      { background: var(--gruenHell); color: var(--gruen); }
+.status.probe   { background: var(--gruenHell); color: var(--gruen); opacity: .75; }
+.status.fehler  { background: var(--rotHell);   color: var(--rot); }
+.status.uebersprungen { background: var(--gelbHell); color: var(--gelb); }
+/* Ungeklaerter Ausgang - muss ins Auge springen, denn nur ein Mensch kann das
+   aufloesen. Bewusst nicht rot wie ein Fehler: es ist kein Fehler, sondern
+   fehlendes Wissen. */
+.status.unklar { background: #7c3aed; color: #fff; }
+.zahlkachel.unklar span { color: #7c3aed; }
+.zahlkachel.unklar { border-color: #7c3aed; }
+
+/* ------------------------------ Vorgang ----------------------------- */
+.stufe { display: flex; gap: 10px; margin-bottom: 16px; }
+.stufe > div:last-child { flex: 1; min-width: 0; }
+.stufeNr {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--blau); color: #fff; display: flex;
+  align-items: center; justify-content: center;
+  font: 700 12px "Segoe UI", sans-serif; margin-top: 1px;
+}
+.stufe b { font-size: 13px; }
+.stufe .hilfe { margin: 3px 0 7px; }
+
+.rezeptKopf { border-top: 1px solid var(--rand); padding-top: 12px; margin-top: 4px; }
+
+.schritteKopf {
+  display: flex; align-items: center; gap: 8px;
+  margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--rand);
+}
+.zaehler {
+  background: var(--flaeche); border: 1px solid var(--rand); border-radius: 999px;
+  padding: 1px 8px; font-size: 11px; font-weight: 700; color: var(--gedaempft);
+}
+
+.schritte { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+.schritte li {
+  counter-increment: s; display: flex; gap: 8px; align-items: flex-start;
+  padding: 8px; border: 1px solid var(--rand); border-radius: 8px;
+  margin-bottom: 5px; background: var(--flaeche); font-size: 12px;
+}
+.schritte li::before {
+  content: counter(s); flex: none; width: 19px; height: 19px; border-radius: 5px;
+  background: var(--rand); color: var(--gedaempft); display: flex;
+  align-items: center; justify-content: center; font: 700 10px "Segoe UI", sans-serif;
+}
+.schritte li.endgueltig { border-color: var(--rot); background: var(--rotHell); }
+.schritte li.aus { opacity: .45; }
+/* Rueckweg-Schritte: laufen auch, wenn der Antrag vorher endete */
+.schritte li.immer { border-left: 3px solid var(--blau); }
+.schrittWerkzeuge label.immerBez { color: var(--blau); }
+.schritteInhalt { flex: 1; min-width: 0; }
+.schrittKopf { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.aktionMarke {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  color: var(--blau);
+}
+.schrittBez { font-weight: 600; overflow-wrap: anywhere; }
+.schrittWert {
+  display: block; color: var(--gedaempft); font-size: 11px; margin-top: 2px;
+  font-family: "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere;
+}
+.schrittWert .platz { color: var(--blau); font-weight: 700; }
+.schrittNav { color: var(--gelb); font-size: 10px; font-weight: 700; }
+.schrittWerkzeuge { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.schrittWerkzeuge button { padding: 3px 7px; font-size: 10px; border-radius: 5px; }
+.schrittWerkzeuge label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; color: var(--rot); cursor: pointer;
+}
+
+/* -------------------------------- Lauf ------------------------------ */
+.fortschrittHuelle {
+  height: 8px; background: var(--rand); border-radius: 999px; overflow: hidden; margin-top: 4px;
+}
+.fortschritt { height: 100%; width: 0; background: var(--gruen); transition: width .3s; }
+.fortschrittText {
+  text-align: center; font-size: 12px; font-weight: 600;
+  color: var(--gedaempft); margin: 6px 0 12px; font-variant-numeric: tabular-nums;
+}
+
+.zaehlerreihe { display: flex; gap: 6px; margin-bottom: 12px; }
+.zahlkachel {
+  flex: 1; text-align: center; padding: 9px 4px; border-radius: 8px; background: var(--flaeche);
+  border: 1px solid var(--rand);
+}
+.zahlkachel span { display: block; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.zahlkachel small { font-size: 10px; color: var(--gedaempft); text-transform: uppercase; letter-spacing: .03em; }
+.zahlkachel.ok span     { color: var(--gruen); }
+.zahlkachel.fehler span { color: var(--rot); }
+
+.aktuell {
+  background: var(--flaeche); border: 1px solid var(--rand); border-left: 3px solid var(--blau);
+  border-radius: 8px; padding: 9px 11px; font-size: 12px; margin-bottom: 12px;
+}
+.aktuell b { display: block; font-size: 14px; margin-bottom: 2px; }
+.aktuell small { color: var(--gedaempft); }
+
+.pruefliste {
+  border-top: 1px solid var(--rand); padding-top: 12px; margin-top: 16px;
+}
+.pruefzeile {
+  display: flex; gap: 8px; align-items: center; padding: 4px 0;
+  font-size: 12px; color: var(--gedaempft);
+}
+.pruefzeile .haken {
+  flex: none; width: 17px; height: 17px; border-radius: 50%; background: var(--rand);
+  color: var(--gedaempft); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.pruefzeile.erfuellt { color: var(--text); }
+.pruefzeile.erfuellt .haken { background: var(--gruenHell); color: var(--gruen); }
+.pruefzeile.warnung2 .haken { background: var(--gelbHell); color: var(--gelb); }
+
+/* ----------------------------- Protokoll ---------------------------- */
+.verlauf {
+  margin-top: 12px; max-height: 420px; overflow-y: auto;
+  border: 1px solid var(--rand); border-radius: 8px;
+  font-family: "Cascadia Mono", Consolas, monospace; font-size: 11px;
+}
+.verlaufZeile { padding: 5px 8px; border-bottom: 1px solid var(--rand); display: flex; gap: 7px; }
+.verlaufZeile:last-child { border-bottom: 0; }
+.verlaufZeit { color: var(--gedaempft); flex: none; font-variant-numeric: tabular-nums; }
+.verlaufText { flex: 1; overflow-wrap: anywhere; }
+.verlaufZeile.ok      .verlaufText { color: var(--gruen); }
+.verlaufZeile.fehler  .verlaufText { color: var(--rot); font-weight: 700; }
+.verlaufZeile.warnung .verlaufText { color: var(--gelb); }
+.leerHinweis { padding: 18px; text-align: center; color: var(--gedaempft); font-size: 12px; }
+
+/* ----------------------------- Optionen ----------------------------- */
+.schalter {
+  display: flex; gap: 9px; align-items: flex-start; padding: 10px;
+  border: 1px solid var(--rand); border-radius: 8px; margin-bottom: 8px;
+  cursor: pointer; background: var(--flaeche);
+}
+.schalter input { margin-top: 2px; flex: none; width: 15px; height: 15px; accent-color: var(--blau); }
+.schalter small { color: var(--gedaempft); font-size: 11px; }
+
+/* -------------------------------- Fuß ------------------------------- */
+.fuss {
+  flex: none; padding: 7px 12px; border-top: 1px solid var(--rand);
+  background: var(--flaeche); font-size: 11px; color: var(--gedaempft); text-align: center;
+}

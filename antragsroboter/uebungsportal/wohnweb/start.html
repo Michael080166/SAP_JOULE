@@ -1,0 +1,22 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Übung · Startseite</title><link rel="stylesheet" href="stil.css"></head><body>
+<div id="kopf"></div>
+<main>
+  <h1>Willkommen im Übungsportal.</h1>
+  <div class="karte" style="max-width:420px">
+    <h2 style="color:#1f4e8c;font-weight:400;font-size:19px;margin:0 0 10px">Förderfälle</h2>
+    <p style="color:#46586f;font-size:13px">Hier finden Sie die allgemeine
+       Förderfallübersicht sowie eine Übersicht über die Förderfälle, die zum
+       nächsten Jahreswechsel gelöscht werden.</p>
+    <p style="margin-top:22px;border-bottom:1px solid #1f4e8c;padding-bottom:7px">
+      <a href="uebersicht.html" style="color:#1f4e8c;font-weight:600;text-decoration:none">
+        Allgemeine Förderfallübersicht</a></p>
+    <p style="border-bottom:1px solid #1f4e8c;padding-bottom:7px">
+      <a href="#" style="color:#1f4e8c;font-weight:600;text-decoration:none">
+        Löschlauf-Übersicht</a></p>
+  </div>
+</main>
+<script src="daten.js"></script>
+<script>
+if (sitzungPruefen()) { document.getElementById('kopf').innerHTML = kopf(null); kopfBeleben(); }
+</script></body></html>

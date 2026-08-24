@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Übungsportal · Freigabe erteilt</title>
+<link rel="stylesheet" href="gemeinsam.css">
+</head>
+<body>
+<div class="uebungsband">ÜBUNGSPORTAL — hier wird nichts echt freigegeben</div>
+<header><b>Antragsverwaltung</b><span class="wer"></span></header>
+<main>
+  <div class="karte" id="inhalt"></div>
+</main>
+<script src="gemeinsam.js"></script>
+<script>
+if (sitzungPruefen()) {
+  kopfZeichnen();
+  const nr = parameter('nr');
+  document.getElementById('inhalt').innerHTML = `
+    <h1>Freigabe erteilt</h1>
+    <div class="erfolg">Antrag ${nr} wurde freigegeben.</div>
+    <button class="zurueck" onclick="location.href='liste.html'">Zur Liste</button>`;
+}
+</script>
+</body>
+</html>

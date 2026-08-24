@@ -1,0 +1,37 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Übung · Allgemeine Förderfallübersicht</title>
+<link rel="stylesheet" href="stil.css"></head><body>
+<div id="kopf"></div>
+<main>
+  <div class="karte">
+    <h1>Allgemeine Förderfallübersicht</h1>
+    <input type="text" class="suche" id="suche" placeholder="Suchen">
+    <p style="color:#46586f;font-size:12px">Bitte beachten Sie: Ausgewählte
+       Filtereinstellungen gelten auch für den Export.</p>
+    <p class="gesamt" id="gesamt"></p>
+    <table>
+      <thead><tr>
+        <th>Name</th><th>Objekt-Adresse</th><th>Objekt-Ort</th>
+        <th>Aktenzeichen</th><th>Vorgangstyp</th><th>Status</th>
+      </tr></thead>
+      <tbody id="zeilen"></tbody>
+    </table>
+  </div>
+</main>
+<script src="daten.js"></script>
+<script>
+if (sitzungPruefen()) {
+  document.getElementById('kopf').innerHTML = kopf('start.html');
+  kopfBeleben();
+  const b = bestand();
+  document.getElementById('gesamt').textContent = `Gesamt: ${b.length} Förderfälle`;
+  // Die Adresse traegt NUR die GUID - genau wie im Original. Damit ist ein
+  // Antrag nicht ueber sein Aktenzeichen ansteuerbar.
+  document.getElementById('zeilen').innerHTML = b.map(f => `
+    <tr>
+      <td><a href="fall.html?id=${f.id}">${f.name}</a></td>
+      <td>${f.adresse}</td><td>${f.ort}</td>
+      <td>${f.aktenzeichen}</td><td>${f.vorgangstyp}</td><td>${f.status}</td>
+    </tr>`).join('');
+}
+</script></body></html>

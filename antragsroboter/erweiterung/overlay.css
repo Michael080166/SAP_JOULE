@@ -1,0 +1,19 @@
+/* Antragsroboter - Einbettung der Statusanzeige in die Portalseite.
+ *
+ * Hier steht bewusst fast nichts: die eigentliche Gestaltung liegt im
+ * Shadow-DOM (siehe inhalt.js) und ist damit gegen das CSS des Portals
+ * abgeschirmt. Dieses Element ist nur der Traeger und darf das Layout der
+ * Seite unter keinen Umstaenden beeinflussen.
+ */
+#antragsroboter-overlay {
+  all: initial;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  z-index: 2147483647;
+}

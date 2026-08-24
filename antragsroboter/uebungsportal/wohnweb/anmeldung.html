@@ -1,0 +1,27 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Übung · Anmeldung</title><link rel="stylesheet" href="stil.css"></head><body>
+<div class="uebungsband">ÜBUNGSPORTAL — Nachbau zu Testzwecken.</div>
+<main><div class="karte" style="max-width:480px;margin:40px auto">
+  <h1>Anmeldung Übungsportal</h1>
+  <p style="color:#46586f">Beliebige Eingaben werden angenommen. Der Roboter
+     zeichnet dieses Formular bewusst nicht auf.</p>
+  <form id="f" class="formular">
+    <label for="benutzer">Anmeldename *</label>
+    <input type="text" id="benutzer" name="benutzer" value="p.bearbeiter">
+    <label for="kennwort">Passwort *</label>
+    <input type="password" id="kennwort" name="kennwort" value="geheim">
+    <div style="text-align:right;margin-top:22px">
+      <button type="submit" class="senden"
+        style="background:#1f4e8c;color:#fff;border:0;padding:11px 22px;font-weight:600;cursor:pointer">
+        Anmelden</button>
+    </div>
+  </form>
+</div></main>
+<script src="daten.js"></script>
+<script>
+document.getElementById('f').addEventListener('submit', ev => {
+  ev.preventDefault();
+  localStorage.setItem('ww.sitzung', 'ja');
+  location.href = 'start.html';
+});
+</script></body></html>

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Antragsroboter",
+  "version": "1.0.0",
+  "description": "Zeichnet einen Freigabe-Vorgang einmal auf und spielt ihn fuer hunderte Antraege ab. Laeuft lokal, ohne Server, ohne Installation.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "unlimitedStorage",
+    "scripting",
+    "tabs",
+    "sidePanel",
+    "downloads"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "hintergrund.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "inhalt.js"
+      ],
+      "css": [
+        "overlay.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "action": {
+    "default_title": "Antragsroboter oeffnen"
+  },
+  "icons": {
+    "16": "symbole/icon16.png",
+    "48": "symbole/icon48.png",
+    "128": "symbole/icon128.png"
+  }
+}
