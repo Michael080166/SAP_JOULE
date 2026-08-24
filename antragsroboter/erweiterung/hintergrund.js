@@ -21,11 +21,21 @@ const STANDARD = {
     // Text, an dem die abgelaufene Sitzung erkannt wird - typischerweise die
     // Ueberschrift der Anmeldemaske.
     sitzungsText: 'Anmeldung WohnWeb\nBitte melden Sie sich an',
+    // Hinweisfenster, die sich ueber die Seite legen und weggeklickt werden
+    // muessen. In Edge begruesst WohnWeb jede Anmeldung mit dem Hinweis auf
+    // den nicht unterstuetzten Browser.
+    stoererTexte: 'Ja, verstanden',
     beispielwert: '',
     erstellt: ''
   },
   antraege: [],
   lauf: {
+    // Kennzeichen dieses Durchlaufs. Meldungen aus der Seite tragen es mit
+    // sich; passt es nicht, stammen sie aus einem frueheren Lauf und werden
+    // verworfen. Ohne das koennen Nachzuegler eines beendeten Laufs den
+    // gerade gestarteten verstellen - der Zeiger springt, und Antraege
+    // bleiben unbearbeitet liegen.
+    id: 0,
     aktiv: false,
     pausiert: false,
     tabId: null,
@@ -132,6 +142,7 @@ function auftragBauen(z, startAb) {
     werte: werteFuer(antrag),
     optionen: z.optionen,
     vorgemerkt: z.lauf.vorgemerkt || null,
+    laufId: z.lauf.id,
     startAb
   };
 }
@@ -159,6 +170,7 @@ async function laufStarten(tabId, nurOffene) {
       for (const a of z.antraege) { a.status = 'offen'; a.meldung = ''; a.zeit = ''; }
     }
     z.lauf = {
+      id: (z.lauf.id || 0) + 1,
       aktiv: true, pausiert: false, tabId,
       antragIndex: -1, schrittIndex: 0, schrittLaufend: null, vorgemerkt: null,
       fehlerInFolge: 0, letzteAktivitaet: Date.now(), grund: '',
@@ -448,8 +460,24 @@ chrome.runtime.onMessage.addListener((nachricht, absender, antworten) => {
   return true;      // Antwort kommt asynchron
 });
 
+// Meldungen aus der Seite, die den Ablauf betreffen. Sie muessen zum
+// laufenden Durchlauf gehoeren.
+const LAUFMELDUNGEN = new Set(['schrittBeginn', 'schrittFertig', 'schrittFehler',
+                               'antragFertig', 'antragErgebnis', 'sitzungAbgelaufen',
+                               'stoererWeg']);
+
 async function behandle(n, absender) {
   const tabId = absender?.tab?.id ?? null;
+
+  // Nachzuegler eines frueheren Laufs verwerfen. Ein Skript in der Seite kann
+  // nach dem Ende eines Laufs noch kurz weiterarbeiten; seine Meldungen
+  // duerfen den naechsten Lauf nicht durcheinanderbringen.
+  if (LAUFMELDUNGEN.has(n.typ) && n.laufId !== undefined) {
+    const z = await lies();
+    if (n.laufId !== z.lauf.id) {
+      return { ok: false, grund: 'Meldung stammt aus einem frueheren Lauf' };
+    }
+  }
 
   switch (n.typ) {
 
@@ -525,6 +553,16 @@ async function behandle(n, absender) {
           }
         }
         liste.push(s);
+      });
+      return { ok: true };
+    }
+
+    case 'stoererWeg': {
+      await aendere(async z => {
+        z.lauf.letzteAktivitaet = Date.now();
+        notiere(z, { antrag: z.antraege[z.lauf.antragIndex]?.wert || '',
+                     ereignis: 'Hinweisfenster weggeklickt', status: 'info',
+                     detail: `"${n.text}"` });
       });
       return { ok: true };
     }

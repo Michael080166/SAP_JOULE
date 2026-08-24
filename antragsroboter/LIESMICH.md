@@ -34,12 +34,30 @@ Einmalig, dauert keine Minute:
 3. Oben auf **Entpackte Erweiterung laden**.
 4. Den Ordner **`erweiterung`** auswählen (den Ordner selbst, nicht eine Datei darin).
 
+### Edge, Chrome oder Firefox?
+
+**Edge genügt.** Edge und Chrome teilen denselben Unterbau (Chromium); der
+Roboter läuft in beiden gleich.
+
+WohnWeb begrüßt Edge allerdings mit dem Kasten *„Ihr Browser wird nicht
+unterstützt"*, der sich über die Seite legt und alles dahinter blockiert.
+Beim Anmelden klickt ihn ein Mensch weg; taucht er später wieder auf, räumt
+ihn der Roboter selbst — siehe **Hinweisfenster wegklicken** im Reiter
+*Vorgang*, voreingestellt auf `Ja, verstanden`.
+
+Das ist keine Notlösung: Solche Kästen erscheinen unregelmäßig und ließen
+sich darum ohnehin nicht als fester Schritt aufzeichnen. Wäre der Kasten
+beim Abspielen einmal nicht da, würde ein starres Rezept daran scheitern.
+
+Firefox nutzt ein anderes Erweiterungsformat — dort läuft der Roboter
+**nicht**.
+
 Fertig. Der Roboter bleibt geladen, auch nach einem Neustart des Browsers.
 
 Zum Öffnen: oben rechts auf das Puzzleteil, dann auf **Antragsroboter**. Das
 Bedienfeld erscheint als Seitenleiste neben dem Portal.
 
-> **Alternative:** `Antragsroboter-starten.cmd` startet Edge mit bereits
+> **Alternative:** `Antragsroboter-starten.cmd` startet den Browser mit bereits
 > geladenem Roboter und einem eigenen Browserprofil. Trage oben in der Datei
 > eure Portal-Adresse ein. Nützlich, wenn es sich wie ein Windows-Programm
 > anfühlen soll. Falls euer Edge das Laden per Befehlszeile unterbindet,

@@ -69,7 +69,40 @@ function kopf(zurueck) {
   ${zurueck ? `<div class="zurueckleiste"><a href="${zurueck}">&lsaquo; Zur Startseite</a></div>` : ''}`;
 }
 
+/* Hinweiskasten "Browser wird nicht unterstuetzt".
+ *
+ * Bildet das Verhalten nach, das WohnWeb in Edge zeigt: er legt sich ueber
+ * die Seite und blockiert alles dahinter. Er erscheint NICHT bei jedem
+ * Aufruf - sonst waere er als fester Schritt aufzeichenbar, und die
+ * Schwierigkeit bestuende gar nicht. */
+function stoererZeigen() {
+  if (!angemeldet()) return;
+  const zaehler = Number(localStorage.getItem('ww.seitenaufrufe') || '0') + 1;
+  localStorage.setItem('ww.seitenaufrufe', String(zaehler));
+  // Bei jedem dritten Seitenaufbau - unregelmaessig genug, um ein starres
+  // Rezept scheitern zu lassen.
+  if (zaehler % 3 !== 1) return;
+
+  const decke = document.createElement('div');
+  decke.className = 'decke';
+  decke.innerHTML = `
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h2>Ihr Browser wird nicht unterstützt.</h2>
+      <p style="font-size:13px">Der von Ihnen verwendete Browser wird nicht
+         unterstützt. Daher kann es zu Darstellungsfehlern und Problemen bei
+         der Nutzbarkeit des Portals kommen. Folgende Browser werden
+         unterstützt:</p>
+      <ul style="font-size:13px"><li>Mozilla Firefox</li><li>Google Chrome</li></ul>
+      <div class="fuss" style="justify-content:flex-end">
+        <button class="senden" id="stoererWeg">Ja, verstanden</button>
+      </div>
+    </div>`;
+  document.body.appendChild(decke);
+  decke.querySelector('#stoererWeg').addEventListener('click', () => decke.remove());
+}
+
 function kopfBeleben() {
+  stoererZeigen();
   const ab = document.getElementById('abmelden');
   if (ab) ab.addEventListener('click', ev => {
     ev.preventDefault();

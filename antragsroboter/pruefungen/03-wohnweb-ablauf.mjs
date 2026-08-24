@@ -77,6 +77,15 @@ const seite = ctx.pages()[0] || await ctx.newPage();
 await seite.goto(`${PORTAL}/anmeldung.html`, { waitUntil: 'domcontentloaded' });
 await seite.click('button[type=submit]');
 await seite.waitForURL('**/start.html', { timeout: 10000 });
+
+// Den Browser-Hinweiskasten wegklicken - das macht im Echtbetrieb der
+// Mensch bei der Anmeldung. Um spätere Auftritte kümmert sich der Roboter.
+async function hinweisWeg() {
+  const knopf = seite.locator('button', { hasText: 'Ja, verstanden' });
+  if (await knopf.count()) { await knopf.first().click(); await schlaf(200); }
+}
+await hinweisWeg();
+
 await seite.click('a[href="uebersicht.html"]');
 await seite.waitForURL('**/uebersicht.html', { timeout: 10000 });
 await schlaf(400);
@@ -153,7 +162,12 @@ const rezept = {
                          navigiert: true, immer: true })
   ],
   erfolgText: '', fehlerText: 'ist nicht vorhanden\nkeine Prüfung einzuleiten',
-  sitzungsText: 'Anmeldung Übungsportal', beispielwert: '', erstellt: ''
+  sitzungsText: 'Anmeldung Übungsportal',
+  // Der Hinweiskasten des Portals legt sich unregelmässig über die Seite.
+  // Er lässt sich nicht als fester Schritt aufzeichnen - mal ist er da,
+  // mal nicht. Also wird er weggeklickt, wenn er auftaucht.
+  stoererTexte: 'Ja, verstanden',
+  beispielwert: '', erstellt: ''
 };
 
 const z0 = await zustand();
@@ -187,6 +201,7 @@ pruefe(nachProbe === 0, 'Trockenlauf hat NICHTS eingeleitet', `${nachProbe} eing
 console.log('\n===============  5. Echter Lauf  ===============');
 await seite.goto(`${PORTAL}/uebersicht.html`, { waitUntil: 'domcontentloaded' });
 await schlaf(400);
+await hinweisWeg();
 z = await zustand();
 await anRoboter({ typ: 'zustandSetzen', aenderung: {
   antraege: structuredClone(antraege),
@@ -243,10 +258,20 @@ if (luegen.length) {
   }
 }
 
+// Nachweis, dass der Hinweiskasten überhaupt im Weg stand und geräumt wurde.
+// Ohne diesen Beleg könnte der Test auch dann grün sein, wenn der Kasten gar
+// nicht erschienen ist.
+const geraeumt = z.protokoll.filter(e => e.ereignis === 'Hinweisfenster weggeklickt');
+console.log(`   Hinweisfenster weggeklickt: ${geraeumt.length}x`);
+pruefe(geraeumt.length > 0,
+       'Der Browser-Hinweiskasten wurde erkannt und weggeklickt',
+       `${geraeumt.length}x`);
+
 console.log('\n===============  6. Zweiter Lauf: nichts doppelt  ===============');
 // Dieselbe Liste noch einmal - jetzt ist nichts mehr "gestellt"
 await seite.goto(`${PORTAL}/uebersicht.html`, { waitUntil: 'domcontentloaded' });
 await schlaf(400);
+await hinweisWeg();
 z = await zustand();
 await anRoboter({ typ: 'zustandSetzen', aenderung: {
   antraege: structuredClone(antraege),

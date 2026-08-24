@@ -796,13 +796,14 @@
   // Hier gilt immer: der Freigabe-Klick ist bereits raus. Sonst waeren wir
   // nicht auf einer Folgeseite gelandet.
   async function nurPruefen(auftrag) {
+    const meldeLauf = nachricht => melde({ ...nachricht, laufId: auftrag.laufId });
     // Stand das Ergebnis schon fest, bevor der Rueckweg die Seite wechselte,
     // dann gilt es. Hier noch einmal die Seite zu befragen waere grob
     // irrefuehrend: wir stehen inzwischen auf der Uebersicht, und die weiss
     // nichts ueber den Antrag, der eben ausgelassen wurde oder scheiterte.
     if (auftrag.vorgemerkt) {
       statusZeigen(`${auftrag.antrag} &middot; abgeschlossen`, auftrag.vorgemerkt.meldung);
-      await melde({ typ: 'antragFertig', ergebnis: auftrag.vorgemerkt });
+      await meldeLauf({ typ: 'antragFertig', ergebnis: auftrag.vorgemerkt });
       return;
     }
 
@@ -815,13 +816,13 @@
     if (abgemeldet) {
       statusZeigen(`${auftrag.antrag} &middot; Sitzung abgelaufen`,
                    'Ausgang dieses Antrags ungeklaert.', true);
-      await melde({ typ: 'sitzungAbgelaufen', erkanntAn: abgemeldet, freigabeAb: true });
+      await meldeLauf({ typ: 'sitzungAbgelaufen', erkanntAn: abgemeldet, freigabeAb: true });
       return;
     }
 
     const ergebnis = await pruefeErgebnis(auftrag.rezept, 8000, false, true);
     statusZeigen(`${auftrag.antrag} &middot; ${ergebnis.ok ? 'fertig' : 'Problem'}`, ergebnis.meldung);
-    await melde({ typ: 'antragFertig', ergebnis });
+    await meldeLauf({ typ: 'antragFertig', ergebnis });
   }
 
   // Steht die Anmeldeseite wieder da, ist die Sitzung abgelaufen.
@@ -838,8 +839,39 @@
     return marker.find(m => text.includes(m)) || null;
   }
 
+  /* ------------------------------------------------------------------ *
+   * Stoerende Hinweisfenster wegklicken                                 *
+   * ------------------------------------------------------------------ *
+   * WohnWeb begruesst Edge mit "Ihr Browser wird nicht unterstuetzt".
+   * Dieser Kasten legt sich ueber die Seite und blockiert jeden Klick
+   * dahinter. Er taucht nicht zuverlaessig auf - mal ja, mal nein - und
+   * laesst sich darum nicht als fester Schritt aufzeichnen: waere er
+   * einmal nicht da, scheiterte der Antrag daran.
+   *
+   * Also wird vor jedem Schritt kurz nachgesehen und weggeklickt, was im
+   * Weg steht. Ist nichts da, kostet es nichts.
+   */
+  function stoererWegklicken(rezept) {
+    const texte = zeilen(rezept.stoererTexte);
+    if (!texte.length) return null;
+    for (const t of texte) {
+      const passende = [...document.querySelectorAll(KLICKBAR)]
+        .filter(istBedienbar)
+        .filter(e => normText(beschriftung(e)) === t);
+      // Das innerste Element nehmen - sonst trifft man den umschliessenden
+      // Kasten statt des Knopfes.
+      const knopf = passende.find(e => !passende.some(a => a !== e && e.contains(a)));
+      if (knopf) { echterKlick(knopf); return t; }
+    }
+    return null;
+  }
+
   async function spiele(auftrag) {
-    const { rezept, antrag, werte, optionen, startAb } = auftrag;
+    const { rezept, antrag, werte, optionen, startAb, laufId } = auftrag;
+    // Jede Meldung traegt das Kennzeichen ihres Laufs. Kommt sie zu spaet -
+    // etwa weil dieses Skript nach dem Ende noch nachklappert -, erkennt der
+    // Hintergrund sie als Nachzuegler und verwirft sie.
+    const meldeLauf = nachricht => melde({ ...nachricht, laufId });
     wiedergabeAktiv = true;
     abbruchGewuenscht = false;
 
@@ -858,7 +890,7 @@
     // Ergebnis festhalten, ohne den Antrag schon abzuschliessen.
     const vormerken = async ergebnis => {
       vorgemerkt = ergebnis;
-      await melde({ typ: 'antragErgebnis', ergebnis });
+      await meldeLauf({ typ: 'antragErgebnis', ergebnis });
     };
 
     // Wird der Lauf nach einem Seitenwechsel mitten im Rezept fortgesetzt,
@@ -883,6 +915,13 @@
       // Abwarten der Bestaetigung). Der Rueckweg bleibt davon unberuehrt.
       if (optionen.trockenlauf && freigabeAusgelassen && !s.immer) continue;
 
+      // Erst aufraeumen, was im Weg steht.
+      const weggeklickt = stoererWegklicken(rezept);
+      if (weggeklickt) {
+        await meldeLauf({ typ: 'stoererWeg', text: weggeklickt });
+        await schlaf(250);          // dem Kasten Zeit zum Verschwinden geben
+      }
+
       // Abgemeldet? Solange der Schlussschritt noch nicht abgesetzt ist, ist
       // am Antrag nichts geschehen - er bleibt offen und gilt NICHT als
       // Fehler. Ist die Freigabe dagegen schon raus, ist der Ausgang unklar.
@@ -892,7 +931,7 @@
                      freigabeAusgefuehrt
                        ? 'Ausgang dieses Antrags ungeklaert.'
                        : 'Bitte neu anmelden, danach im Panel auf Fortsetzen.', true);
-        await melde({ typ: 'sitzungAbgelaufen', erkanntAn: abgemeldet,
+        await meldeLauf({ typ: 'sitzungAbgelaufen', erkanntAn: abgemeldet,
                       freigabeAb: freigabeAusgefuehrt });
         wiedergabeAktiv = false;
         return;
@@ -906,7 +945,7 @@
       if (g.endgueltig) {
         if (optionen.trockenlauf) {
           freigabeAusgelassen = true;
-          await melde({ typ: 'schrittFertig', index: i, ergebnis: 'im Trockenlauf uebersprungen' });
+          await meldeLauf({ typ: 'schrittFertig', index: i, ergebnis: 'im Trockenlauf uebersprungen' });
           continue;
         }
         if (optionen.einzelbestaetigung) {
@@ -917,18 +956,18 @@
             wiedergabeAktiv = false; statusWeg(); return;
           }
           if (wahl === 'ueberspringen') {
-            await melde({ typ: 'antragFertig', ergebnis: { ok: null, meldung: 'Vom Bediener uebersprungen' } });
+            await meldeLauf({ typ: 'antragFertig', ergebnis: { ok: null, meldung: 'Vom Bediener uebersprungen' } });
             wiedergabeAktiv = false; statusWeg(); return;
           }
         }
       }
 
-      await melde({ typ: 'schrittBeginn', index: i });
+      await meldeLauf({ typ: 'schrittBeginn', index: i });
       try {
         const ergebnis = await fuehreAus(g, werte);
         // Ab hier ist die Freigabe unwiderruflich draussen.
         if (g.endgueltig) freigabeAusgefuehrt = true;
-        await melde({ typ: 'schrittFertig', index: i, ergebnis });
+        await meldeLauf({ typ: 'schrittFertig', index: i, ergebnis });
       } catch (fehler) {
         // Eine nicht erfuellte Vorbedingung ist kein Fehler, sondern eine
         // Feststellung: dieser Antrag ist noch nicht so weit. Er wird
@@ -973,7 +1012,7 @@
     const ergebnis = vorgemerkt
       || await pruefeErgebnis(rezept, 8000, freigabeAusgelassen, freigabeAusgefuehrt);
     statusZeigen(`${antrag} &middot; ${ergebnis.ok ? 'fertig' : 'Problem'}`, ergebnis.meldung);
-    await melde({ typ: 'antragFertig', ergebnis });
+    await meldeLauf({ typ: 'antragFertig', ergebnis });
     wiedergabeAktiv = false;
   }
 

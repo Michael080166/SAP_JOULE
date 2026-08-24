@@ -33,10 +33,10 @@ if not exist "%ERWEITERUNG%\manifest.json" (
   exit /b 1
 )
 
-rem WohnWeb unterstuetzt laut eigenem Hinweis nur Firefox und Chrome.
-rem Chrome wird darum zuerst gesucht. Edge dient nur als Notnagel und wird
-rem ausdruecklich als solcher gemeldet - auf einem nicht unterstuetzten
-rem Browser zu automatisieren ist der falsche Anfang.
+rem Edge und Chrome teilen denselben Unterbau - der Roboter laeuft in beiden.
+rem Chrome wird bevorzugt, weil WohnWeb in Edge einen Hinweiskasten zeigt.
+rem Steht nur Edge zur Verfuegung, ist das kein Hindernis: den Kasten klickt
+rem der Roboter selbst weg.
 set "BROWSER="
 set "BROWSERNAME="
 for %%P in (
@@ -55,13 +55,13 @@ if not defined BROWSER (
     "%LocalAppData%\Microsoft\Edge\Application\msedge.exe"
   ) do if not defined BROWSER if exist %%P (
     set "BROWSER=%%~P"
-    set "BROWSERNAME=Microsoft Edge  [ACHTUNG: von WohnWeb nicht unterstuetzt]"
+    set "BROWSERNAME=Microsoft Edge"
   )
 )
 
 if not defined BROWSER (
   echo.
-  echo   Weder Google Chrome noch Microsoft Edge gefunden.
+  echo   Weder Microsoft Edge noch Google Chrome gefunden.
   echo   Bitte den Roboter von Hand laden - siehe LIESMICH.md, Abschnitt
   echo   "Einrichten in 4 Klicks".
   echo.

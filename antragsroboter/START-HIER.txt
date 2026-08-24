@@ -12,14 +12,25 @@ aussen auf - Antragsnummern und Protokolle verlassen den Rechner nicht.
 
 1. WELCHER BROWSER
 --------------------------------------------------------------------
-Google Chrome. WohnWeb unterstuetzt laut eigenem Hinweis nur Firefox
-und Chrome - auf Edge kann es zu Darstellungsfehlern kommen, und die
-treffen einen Roboter haerter als einen Menschen.
+Microsoft Edge genuegt. Edge und Chrome haben denselben Unterbau
+(Chromium) - der Roboter laeuft in beiden gleich.
+
+WohnWeb zeigt in Edge allerdings bei der Anmeldung den Kasten
+"Ihr Browser wird nicht unterstuetzt". Der ist laestig, aber
+beherrschbar:
+
+  - Beim Anmelden klicken SIE ihn einmal mit "Ja, verstanden" weg.
+  - Taucht er spaeter wieder auf, raeumt der Roboter ihn selbst weg.
+    (Einstellbar unter Vorgang -> "Hinweisfenster wegklicken".)
+
+Wer Chrome oder Firefox zur Verfuegung hat, kann sie natuerlich
+verwenden - dann entfaellt der Kasten. Noetig ist es nicht.
 
 
 2. EINRICHTEN - EINMALIG, VIER KLICKS
 --------------------------------------------------------------------
-  1. In Chrome die Adresse   chrome://extensions   oeffnen
+  1. In Edge die Adresse   edge://extensions   oeffnen
+     (in Chrome:           chrome://extensions )
   2. Unten links "Entwicklermodus" einschalten
   3. Oben auf "Entpackte Erweiterung laden"
   4. Den Ordner "erweiterung" auswaehlen

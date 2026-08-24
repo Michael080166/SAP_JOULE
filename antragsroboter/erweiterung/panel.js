@@ -133,6 +133,7 @@ function zeichneVorgang() {
   if (document.activeElement !== $('#erfolgText')) $('#erfolgText').value = rezept.erfolgText || '';
   if (document.activeElement !== $('#fehlerText')) $('#fehlerText').value = rezept.fehlerText || '';
   if (document.activeElement !== $('#sitzungsText')) $('#sitzungsText').value = rezept.sitzungsText || '';
+  if (document.activeElement !== $('#stoererTexte')) $('#stoererTexte').value = rezept.stoererTexte || '';
   if (document.activeElement !== $('#beispielwert') && rezept.beispielwert) {
     $('#beispielwert').value = rezept.beispielwert;
   }
@@ -617,6 +618,7 @@ rezeptFeldBinden('#startUrl',   'startUrl');
 rezeptFeldBinden('#erfolgText', 'erfolgText');
 rezeptFeldBinden('#fehlerText', 'fehlerText');
 rezeptFeldBinden('#sitzungsText', 'sitzungsText');
+rezeptFeldBinden('#stoererTexte', 'stoererTexte');
 
 /* --- Schrittliste: alle Bedienelemente über einen Zuhörer --- */
 $('#schrittListe').addEventListener('click', async ev => {
