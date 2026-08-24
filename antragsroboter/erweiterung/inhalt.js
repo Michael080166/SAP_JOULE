@@ -12,7 +12,13 @@
  */
 (() => {
   'use strict';
-  if (window.__antragsroboterGeladen) return;
+  // Wird das Skript ein zweites Mal eingespielt - das tut der Hintergrund, wenn
+  // eine Seite nicht mehr antwortet -, darf das nicht stumm verpuffen. Statt
+  // abzubrechen, meldet sich die bestehende Fassung erneut beim Hintergrund.
+  if (window.__antragsroboterGeladen) {
+    try { window.__antragsroboterNeuMelden?.(); } catch (e) { /* Kontext hin */ }
+    return;
+  }
   window.__antragsroboterGeladen = true;
 
   const SCHRITT_ZEITLIMIT = 15000;   // wie lange auf ein Element gewartet wird
@@ -1089,7 +1095,16 @@
         antworten({ ok: true });
         break;
       case 'statusWeg':        statusWeg(); antworten({ ok: true }); break;
-      case 'lebt':             antworten({ ok: true, url: location.href, titel: document.title }); break;
+      case 'lebt':
+        antworten({ ok: true, url: location.href, titel: document.title,
+                    beschaeftigt: wiedergabeAktiv });
+        break;
+
+      // Der Hintergrund fasst nach, weil die Seite sich nicht gemeldet hat.
+      case 'meldeDich':
+        antworten({ ok: true, beschaeftigt: wiedergabeAktiv });
+        if (!wiedergabeAktiv) beimHintergrundMelden();
+        break;
       // Ein Element in der Seite anklicken lassen und seinen Selektor melden.
       // Vorbedingungen kann der Rekorder nicht mitschneiden - "pruefe, ob
       // dieses Feld gruen ist" ist kein Klick. Also zeigt der Mensch darauf.
@@ -1127,7 +1142,8 @@
    * laeuft dieser Block erneut - und holt sich den Auftrag dort ab, wo er
    * unterbrochen wurde.
    */
-  (async function start() {
+  async function beimHintergrundMelden() {
+    if (wiedergabeAktiv) return;        // laeuft schon, nicht doppelt anstossen
     const antwort = await melde({ typ: 'seiteBereit', url: location.href, titel: document.title });
     if (!antwort) return;
     if (antwort.modus === 'aufnahme') {
@@ -1138,5 +1154,59 @@
     } else if (antwort.modus === 'pruefen' && antwort.auftrag) {
       nurPruefen(antwort.auftrag);
     }
-  })();
+  }
+
+  // Nach aussen sichtbar, damit eine erneute Einspritzung hier andocken kann.
+  window.__antragsroboterNeuMelden = beimHintergrundMelden;
+
+  beimHintergrundMelden();
+
+  /* ------------------------------------------------------------------ *
+   * Rueckkehr aus dem Vor-/Zurueck-Speicher                             *
+   * ------------------------------------------------------------------ *
+   * Der Browser haelt besuchte Seiten vor (bfcache). Geht man mit dem
+   * Zurueck-Knopf dorthin, wird die Seite NICHT neu aufgebaut - dieses
+   * Skript laeuft dann kein zweites Mal an und meldet sich nie zurueck.
+   * Der Lauf bliebe stehen, bis der Wachhund anschlaegt, und ein laengst
+   * erledigter Antrag landete faelschlich als Fehler im Protokoll.
+   *
+   * Genau das passierte in der Pruefung bei jedem vierten Antrag. Darum
+   * wird die Rueckkehr aus dem Zwischenspeicher ausdruecklich abgefangen.
+   */
+  // Wird diese Seite in den Zwischenspeicher gelegt, muss eine hier noch
+  // laufende Wiedergabe ABGEBROCHEN werden.
+  //
+  // Sonst passiert Folgendes: Die Uebersicht startet Schritt 1, der zur
+  // Antragsseite fuehrt. Die Uebersicht wird dabei eingefroren - mitsamt
+  // ihrer haengenden Wiedergabe. Kommt der Roboter spaeter mit dem
+  // Zurueck-Knopf hierher zurueck, taut diese alte Wiedergabe wieder auf,
+  // haelt die Sperre gesetzt und wartet auf einen Seitenwechsel, der nie
+  // mehr kommt. Der Lauf steht, bis der Wachhund anschlaegt - und ein
+  // erledigter Antrag landet als Fehler im Protokoll.
+  //
+  // Der Fortschritt liegt ohnehin im Hintergrund. Hier etwas aufzubewahren,
+  // waere bestenfalls ueberfluessig und schlimmstenfalls falsch.
+  window.addEventListener('pagehide', () => {
+    abbruchGewuenscht = true;
+    wiedergabeAktiv   = false;
+  });
+
+  window.addEventListener('pageshow', ereignis => {
+    if (!ereignis.persisted) return;    // normaler Aufbau laeuft oben schon
+    // Aus dem Zwischenspeicher zurueck: sauber von vorn beim Hintergrund
+    // anfragen, statt an einer alten Wiedergabe weiterzustricken.
+    abbruchGewuenscht = false;
+    wiedergabeAktiv   = false;
+    // Nach aussen sichtbar, damit eine erneute Einspritzung hier andocken kann.
+  window.__antragsroboterNeuMelden = beimHintergrundMelden;
+
+  beimHintergrundMelden();
+  });
+
+  // Einzelseiten-Anwendungen wechseln die Ansicht ohne Seitenaufbau. Auch
+  // dann muss der Roboter sich wieder melden, wenn er gerade nichts tut.
+  window.addEventListener('popstate', () => {
+    if (wiedergabeAktiv || aufnahmeAktiv) return;
+    setTimeout(beimHintergrundMelden, 150);
+  });
 })();

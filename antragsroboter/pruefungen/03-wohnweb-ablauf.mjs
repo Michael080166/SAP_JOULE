@@ -14,8 +14,8 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 
 const ERWEITERUNG = new URL('../erweiterung', import.meta.url).pathname;
-const PORTAL = 'http://127.0.0.1:8899/wohnweb';
-const PROFIL = '/tmp/antragsroboter-profil-ww';
+const PORTAL = `http://127.0.0.1:${process.env.PORT || 8899}/wohnweb`;
+const PROFIL = `/tmp/antragsroboter-profil-03`;
 
 const schlaf = ms => new Promise(r => setTimeout(r, ms));
 let schlecht = 0;
@@ -230,6 +230,18 @@ const luegen = z.antraege.filter(a =>
 pruefe(luegen.length === 0,
        'Protokoll und Portal stimmen Antrag für Antrag überein',
        luegen.map(a => `${a.wert}=${a.status}`).join(' ') || 'deckungsgleich');
+
+// Bei einer Abweichung den Verlauf zeigen - ohne ihn ist die Ursache
+// nicht zu finden, und ein zweiter Lauf trifft sie vielleicht nicht.
+if (luegen.length) {
+  const betroffen = new Set(luegen.map(a => a.wert));
+  console.log('\n   --- Verlauf rund um die Abweichung ---');
+  for (const e of z.protokoll.slice(-40)) {
+    const markiere = betroffen.has(e.antrag) ? ' <<<' : '';
+    console.log(`   ${e.zeit.slice(11,19)} ${(e.antrag||'—').padEnd(9)} ${e.ereignis}` +
+                `${e.detail ? ' — ' + e.detail.slice(0,60) : ''}${markiere}`);
+  }
+}
 
 console.log('\n===============  6. Zweiter Lauf: nichts doppelt  ===============');
 // Dieselbe Liste noch einmal - jetzt ist nichts mehr "gestellt"

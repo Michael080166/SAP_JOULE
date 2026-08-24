@@ -1,0 +1,103 @@
+# Prüft den Antragsroboter und baut daraus ein versandfertiges Paket.
+#
+# Die Prüfungen laden die Erweiterung in ein echtes Chromium und spielen
+# vollständige Durchläufe gegen zwei Übungsportale ab - es wird nichts
+# nachgestellt. Das Paket am Ende ist genau das, was man weitergeben kann.
+
+name: Prüfungen
+
+on:
+  push:
+    paths:
+      - 'antragsroboter/**'
+      - '.github/workflows/pruefungen.yml'
+  pull_request:
+    paths:
+      - 'antragsroboter/**'
+      - '.github/workflows/pruefungen.yml'
+  workflow_dispatch:        # von Hand auslösbar, wenn ein frisches Paket gebraucht wird
+
+jobs:
+  pruefen:
+    name: End-zu-End-Prüfungen
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Stand holen
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Abhängigkeiten der Prüfungen
+        working-directory: antragsroboter/pruefungen
+        run: npm install --no-audit --no-fund
+
+      - name: Chromium holen
+        working-directory: antragsroboter/pruefungen
+        run: npx playwright install --with-deps chromium
+
+      # Vorab die Syntax aller ausgelieferten Skripte prüfen. Ein Tippfehler
+      # in der Erweiterung fällt sonst erst beim Laden im Browser auf - also
+      # beim Empfänger.
+      - name: Syntax der Erweiterung
+        working-directory: antragsroboter/erweiterung
+        run: |
+          for f in *.js; do
+            echo "  prüfe $f"
+            node --check "$f"
+          done
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
+          echo "manifest.json ist gültiges JSON"
+
+      - name: Prüfungen fahren
+        working-directory: antragsroboter/pruefungen
+        run: npm test
+
+      # Nur bei Fehlschlag: die Bildschirmausgabe der Prüfungen sichern,
+      # damit man ohne erneuten Lauf nachsehen kann, was schiefging.
+      - name: Ausgabe sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruefungs-ausgabe
+          path: antragsroboter/pruefungen/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  paket:
+    name: Versandpaket bauen
+    needs: pruefen                 # nur aus geprüftem Stand
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Stand holen
+        uses: actions/checkout@v4
+
+      # Zusammenstellen, was der Empfänger braucht - und nur das. Die
+      # Prüfungen bleiben draußen: sie brauchen npm, die Erweiterung nicht.
+      - name: Paket zusammenstellen
+        run: |
+          mkdir -p paket/Antragsroboter
+          cp -r antragsroboter/erweiterung          paket/Antragsroboter/
+          cp -r antragsroboter/uebungsportal        paket/Antragsroboter/
+          cp    antragsroboter/LIESMICH.md          paket/Antragsroboter/
+          cp    antragsroboter/beispiel-antraege.csv paket/Antragsroboter/
+          cp    antragsroboter/Antragsroboter-starten.cmd paket/Antragsroboter/
+          cp    antragsroboter/START-HIER.txt       paket/Antragsroboter/
+          echo "Stand: $(date -u '+%Y-%m-%d %H:%M UTC')"  > paket/Antragsroboter/VERSION.txt
+          echo "Commit: ${GITHUB_SHA}"                   >> paket/Antragsroboter/VERSION.txt
+          echo "Prüfungen: bestanden"                    >> paket/Antragsroboter/VERSION.txt
+          echo "--- Inhalt ---"
+          find paket -type f | sort
+
+      - name: Paket bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Antragsroboter
+          path: paket/Antragsroboter
+          retention-days: 90

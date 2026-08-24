@@ -178,7 +178,18 @@ async function naechsterAntrag() {
   const weiter = await aendere(async z => {
     if (!z.lauf.aktiv || z.lauf.pausiert) return null;
 
-    // Normalerweise geht es beim naechsten Antrag weiter. Wurde der Lauf aber
+    // Doppelaufruf abwehren.
+    //
+    // Diese Funktion kann von mehreren Seiten angestossen werden - etwa wenn
+    // eine Rueckmeldung der Seite doppelt eintrifft. Ohne diese Sperre wuerde
+    // der zweite Aufruf den gerade laufenden Antrag ueberspringen, ohne ihn
+    // abzuschliessen: er bliebe fuer immer auf 'laeuft' stehen, waehrend das
+    // Portal ihn laengst verarbeitet hat. Genau diese Luecke zwischen Portal
+    // und Protokoll darf es nicht geben.
+    const laufender = z.antraege[z.lauf.antragIndex];
+    if (laufender && laufender.status === 'laeuft') return null;
+
+    // Sonst geht es beim naechsten Antrag weiter. Wurde der Lauf allerdings
     // angehalten - etwa wegen abgelaufener Sitzung -, ist der aktuelle Antrag
     // auf 'offen' zurueckgesetzt worden und muss noch drankommen. Wer hier
     // stur hochzaehlt, ueberspringt ihn stillschweigend.
@@ -233,10 +244,22 @@ async function naechsterAntrag() {
     // Weiter geht es, sobald sich die neue Seite mit 'seiteBereit' meldet.
   } else {
     // Kein fester Einstieg - die Seite spielt sofort von vorn.
+    //
+    // Antwortet sie nicht, ist das noch kein Fehler: sehr wahrscheinlich laedt
+    // sie gerade neu (der Rueckweg des vorigen Antrags), und sobald sie steht,
+    // meldet sie sich von selbst mit 'seiteBereit' und holt sich den Auftrag
+    // ab. Das hier als Fehler zu buchen wuerde tadellose Antraege verwerfen.
+    // Bleibt die Seite wirklich stumm, greift der Wachhund.
     const z = await lies();
     const auftrag = auftragBauen(z, 0);
     const antwort = await anSeite(weiter.tabId, { typ: 'spielen', auftrag });
-    if (!antwort) await schrittFehlerVerarbeiten('Seite antwortet nicht - laeuft der Roboter im richtigen Tab?');
+    if (!antwort) {
+      await aendere(async zz => {
+        notiere(zz, { antrag: auftrag?.antrag || '', ereignis: 'Seite laedt noch',
+                      status: 'info',
+                      detail: 'Auftrag konnte nicht zugestellt werden - warte auf die Seite' });
+      });
+    }
   }
 }
 
@@ -328,6 +351,52 @@ async function schrittFehlerVerarbeiten(meldung) {
 }
 
 /* -------------------------------------------------------------------- *
+ * Nachfassen - wenn die Seite sich nicht von selbst meldet              *
+ * -------------------------------------------------------------------- *
+ * Der Roboter darf sich nicht darauf verlassen, dass eine Seite sich nach
+ * einem Wechsel meldet. Legt der Browser eine Seite in den Vor-/Zurueck-
+ * Speicher, trennt er dabei ihre Verbindung zur Erweiterung. Wird sie
+ * spaeter mit dem Zurueck-Knopf zurueckgeholt, KANN das Skript darin den
+ * Hintergrund nicht mehr erreichen - es schweigt nicht aus Nachlaessigkeit,
+ * sondern aus Unvermoegen.
+ *
+ * In der Pruefung blieb dadurch jeder dritte bis vierte Antrag haengen und
+ * wurde nach Ablauf des Wachhunds als Fehler verbucht, obwohl das Portal
+ * ihn laengst verarbeitet hatte.
+ *
+ * Darum geht die Nachfrage von hier aus: erst anklopfen, dann das Skript
+ * neu einspritzen, und erst als letztes Mittel die Seite neu laden. Der
+ * Fortschritt liegt ohnehin hier, ein Neuladen kostet also nichts.
+ */
+async function nachfassen(tabId, grund) {
+  const z = await lies();
+  if (!z.lauf.aktiv || z.lauf.pausiert || z.lauf.tabId !== tabId) return;
+  if (Date.now() - (z.lauf.letzteAktivitaet || 0) < 2500) return;   // es tut sich was
+
+  let lebt = await anSeite(tabId, { typ: 'meldeDich' });
+
+  if (!lebt) {
+    // Verbindung tot - Skript neu einspritzen.
+    try {
+      await chrome.scripting.executeScript({ target: { tabId }, files: ['inhalt.js'] });
+      await new Promise(r => setTimeout(r, 400));
+      lebt = await anSeite(tabId, { typ: 'meldeDich' });
+    } catch (e) { /* Tab (noch) nicht bereit */ }
+  }
+
+  if (!lebt) {
+    // Auch das half nicht: neu laden. Gefahrlos, weil der Fortschritt im
+    // Hintergrund liegt und der naechste Schritt daraus hervorgeht.
+    await aendere(async zz => {
+      notiere(zz, { antrag: zz.antraege[zz.lauf.antragIndex]?.wert || '',
+                    ereignis: 'Seite wird neu geladen', status: 'warnung',
+                    detail: `${grund} - Seite antwortete nicht` });
+    });
+    try { await chrome.tabs.reload(tabId); } catch (e) { /* Tab weg */ }
+  }
+}
+
+/* -------------------------------------------------------------------- *
  * Wachhund - erkennt haengende Durchlaeufe                              *
  * -------------------------------------------------------------------- *
  * Wenn eine Seite gar nicht mehr antwortet (Portal haengt, Tab manuell
@@ -343,9 +412,28 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   const z = await lies();
   if (!z.lauf.aktiv || z.lauf.pausiert) return;
   const still = Date.now() - (z.lauf.letzteAktivitaet || 0);
-  if (still < (Number(z.optionen.hangZeitlimit) || 90000)) return;
+  const grenze = Number(z.optionen.hangZeitlimit) || 90000;
+
+  // Vor dem Aufgeben ein Rettungsversuch. Ein stiller Lauf liegt weit
+  // haeufiger an einer abgerissenen Verbindung als an einem echten Haenger.
+  if (still > 15000 && still < grenze) {
+    await nachfassen(z.lauf.tabId, `${Math.round(still / 1000)} s still`);
+    return;
+  }
+  if (still < grenze) return;
+
   await schrittFehlerVerarbeiten(
     `Zeitueberschreitung: seit ${Math.round(still / 1000)} s keine Rueckmeldung von der Seite`);
+});
+
+// Der schnelle Weg: sobald der Tab fertig geladen hat - auch beim Zurueck-
+// holen aus dem Vor-/Zurueck-Speicher - kurz abwarten und nachfassen, falls
+// sich die Seite nicht von selbst gemeldet hat.
+chrome.tabs.onUpdated.addListener(async (tabId, info) => {
+  if (info.status !== 'complete') return;
+  const z = await lies();
+  if (!z.lauf.aktiv || z.lauf.pausiert || z.lauf.tabId !== tabId) return;
+  setTimeout(() => nachfassen(tabId, 'Seite fertig geladen'), 900);
 });
 
 /* -------------------------------------------------------------------- *

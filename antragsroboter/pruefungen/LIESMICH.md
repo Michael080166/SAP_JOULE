@@ -44,3 +44,29 @@ Status filtern, Zeile über das Aktenzeichen finden (die Adressen enthalten nur
 GUIDs), zwei Prüfmerkmale auswerten, Dialog mit Pflichtfeld, Rückweg zur
 Liste. Zwei der zwölf Fälle sind absichtlich nicht freigabereif. Geprüft wird
 am Ende Antrag für Antrag, ob Protokoll und Portalzustand deckungsgleich sind.
+
+## Alles auf einmal
+
+```bash
+npm install          # einmalig
+node alle.mjs        # Server hoch, alle drei Prüfungen, Server runter
+```
+
+Einzeln oder wiederholt:
+
+```bash
+node alle.mjs 03           # nur den WohnWeb-Ablauf
+node alle.mjs 03 03 03 03  # viermal hintereinander
+```
+
+Die Wiederholung ist kein Luxus. Zwei der schwersten Fehler in diesem
+Programm traten nur bei jedem dritten bis vierten Durchlauf auf — ein
+einzelner grüner Lauf hätte beide durchgewinkt.
+
+## Warum playwright fest verdrahtet ist
+
+`package.json` nennt eine genaue Version statt eines Bereichs. Jede
+Playwright-Fassung erwartet ihren eigenen Chromium-Bau; ein stiller
+Versionssprung führt sonst zu Fehlschlägen, die nichts mit dem Roboter zu
+tun haben. Beim Anheben der Version einmal `npx playwright install chromium`
+nachziehen.

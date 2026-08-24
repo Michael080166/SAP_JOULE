@@ -10,8 +10,8 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 
 const ERWEITERUNG = new URL('../erweiterung', import.meta.url).pathname;
-const PORTAL = 'http://127.0.0.1:8899';
-const PROFIL = '/tmp/antragsroboter-profil-sitzung';
+const PORTAL = `http://127.0.0.1:${process.env.PORT || 8899}`;
+const PROFIL = `/tmp/antragsroboter-profil-02`;
 const MARKE  = 'Beliebige Eingaben werden angenommen';   // steht nur auf der Anmeldeseite
 
 const schlaf = ms => new Promise(r => setTimeout(r, ms));

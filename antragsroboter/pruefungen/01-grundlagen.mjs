@@ -10,8 +10,8 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 
 const ERWEITERUNG = new URL('../erweiterung', import.meta.url).pathname;
-const PORTAL      = 'http://127.0.0.1:8899';
-const PROFIL      = '/tmp/antragsroboter-profil';
+const PORTAL      = `http://127.0.0.1:${process.env.PORT || 8899}`;
+const PROFIL      = `/tmp/antragsroboter-profil-01`;
 
 const schlaf = ms => new Promise(r => setTimeout(r, ms));
 let fehlgeschlagen = 0;
