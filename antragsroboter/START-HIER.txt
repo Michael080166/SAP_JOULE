@@ -1,0 +1,150 @@
+ANTRAGSROBOTER - BITTE ZUERST LESEN
+====================================================================
+
+Dieses Programm gibt Antraege im WohnWeb stapelweise frei. Es zeichnet
+einen Vorgang auf, den Sie einmal von Hand machen, und wiederholt ihn
+fuer jeden Antrag aus einer Liste.
+
+Es laeuft ausschliesslich auf Ihrem Rechner. Kein Server, keine
+Installation, keine Administratorrechte. Es baut keine Verbindung nach
+aussen auf - Antragsnummern und Protokolle verlassen den Rechner nicht.
+
+
+1. WELCHER BROWSER
+--------------------------------------------------------------------
+Microsoft Edge genuegt. Edge und Chrome haben denselben Unterbau
+(Chromium) - der Roboter laeuft in beiden gleich.
+
+WohnWeb zeigt in Edge allerdings bei der Anmeldung den Kasten
+"Ihr Browser wird nicht unterstuetzt". Der ist laestig, aber
+beherrschbar:
+
+  - Beim Anmelden klicken SIE ihn einmal mit "Ja, verstanden" weg.
+  - Taucht er spaeter wieder auf, raeumt der Roboter ihn selbst weg.
+    (Einstellbar unter Vorgang -> "Hinweisfenster wegklicken".)
+
+Wer Chrome oder Firefox zur Verfuegung hat, kann sie natuerlich
+verwenden - dann entfaellt der Kasten. Noetig ist es nicht.
+
+
+2. EINRICHTEN - EINMALIG, VIER KLICKS
+--------------------------------------------------------------------
+  1. In Edge die Adresse   edge://extensions   oeffnen
+     (in Chrome:           chrome://extensions )
+  2. Unten links "Entwicklermodus" einschalten
+  3. Oben auf "Entpackte Erweiterung laden"
+  4. Den Ordner "erweiterung" auswaehlen
+     (den ORDNER selbst, nicht eine Datei darin)
+
+Fertig. Die Erweiterung bleibt geladen, auch nach einem Neustart.
+
+Oeffnen: oben rechts auf das Puzzleteil, dann "Antragsroboter".
+Das Bedienfeld erscheint als Leiste neben dem Portal.
+
+
+3. VORHER GEFAHRLOS UEBEN
+--------------------------------------------------------------------
+Im Ordner "uebungsportal" liegt ein Nachbau zum Ausprobieren. Er
+verhaelt sich wie das echte Portal - samt Hinweiskasten, Statusspalte
+und den zwei Pruefmerkmalen -, gibt aber nichts frei.
+
+  - Datei  uebungsportal\wohnweb\anmeldung.html  doppelklicken
+    (oder ins Browserfenster ziehen)
+
+EINMALIG noetig, damit die Erweiterung dort mitarbeitet:
+  edge://extensions  ->  beim Antragsroboter auf "Details"
+  ->  "Dateizugriff zulassen" einschalten
+
+Das gilt NUR fuer das Uebungsportal. Am echten Portal wird das nicht
+gebraucht.
+
+Zwei der zwoelf Uebungsfaelle sind absichtlich nicht freigabereif -
+daran sehen Sie, dass der Roboter sie auslaesst statt sie
+durchzuwinken.
+
+Bitte machen Sie das einmal durch, BEVOR Sie echte Antraege anfassen.
+
+
+4. DER ABLAUF
+--------------------------------------------------------------------
+  1. Am Portal anmelden - von Hand, wie immer.
+     Der Roboter speichert nie ein Kennwort. Er kann es auch nicht:
+     Passwortfelder werden grundsaetzlich nicht aufgezeichnet.
+
+  2. Allgemeine Foerderfalluebersicht oeffnen.
+
+  3. Reiter "Antraege" -> "Liste holen" (Status: gestellt)
+     -> ankreuzen, was bearbeitet werden soll.
+
+  4. Reiter "Vorgang" -> "Aufnahme starten"
+     -> EINEN Antrag vollstaendig von Hand einleiten
+     -> "Aufnahme beenden"
+
+  5. Drei Schritte ergaenzen, die keine Aufnahme mitschneiden kann
+     (unter "Schritt von Hand ergaenzen"):
+       - Vorbedingung: Finanzierung
+       - Vorbedingung: Detailpruefbarkeit
+       - Zurueck zur Uebersicht   [Haken "immer ausfuehren"!]
+
+  6. Reiter "Optionen" -> TROCKENLAUF einschalten -> Lauf starten.
+     Jetzt laeuft alles durch, nur die Freigabe nicht.
+     Sieht das Protokoll gut aus?
+
+  7. Trockenlauf wieder aus. Dann scharf.
+
+
+5. DIE SICHERUNGEN
+--------------------------------------------------------------------
+  TROCKENLAUF          Spielt alles durch ausser der Freigabe selbst.
+  NOTBREMSE            Haelt nach 3 Fehlern hintereinander an.
+  EINZELBESTAETIGUNG   Fragt vor jeder Freigabe nach. Sicher, aber bei
+                       hunderten Antraegen langsam.
+  PROTOKOLL            Eine Zeile je Antrag mit Zeitstempel und
+                       Ergebnis. Als CSV exportierbar (oeffnet in Excel).
+
+Laeuft die Sitzung ab, haelt der Roboter sofort an. Nach dem Neuanmelden
+genuegt "Fortsetzen".
+
+
+6. DER ZUSTAND "UNKLAR" - BITTE BEACHTEN
+--------------------------------------------------------------------
+Bricht die Verbindung genau zwischen dem Freigabe-Klick und der
+Bestaetigung ab, weiss der Roboter nicht, ob das Portal die Freigabe
+noch verbucht hat. Solche Antraege bekommen den Zustand "unklar".
+
+Er faehrt sie NICHT noch einmal an - sonst koennte dieselbe Freigabe
+ein zweites Mal ausgeloest werden.
+
+  ==> Antraege mit Zustand "unklar" bitte im Portal von Hand nachsehen.
+
+Sie stehen im Bedienfeld ganz oben und im CSV-Protokoll.
+
+
+7. WAS DER ROBOTER NICHT KANN
+--------------------------------------------------------------------
+  - Keine TAN-Abfrage mitten im Vorgang
+  - Kein CAPTCHA
+  - Keine Datei-Uploads
+  - Keine inhaltliche Pruefung
+
+Der letzte Punkt ist der wichtigste: Der Roboter entscheidet NICHT, ob
+ein Antrag freigegeben werden darf. Das entscheiden Sie, wenn Sie die
+Liste zusammenstellen. Er spart das Klicken, nicht das Pruefen.
+
+
+8. WENN ETWAS NICHT KLAPPT
+--------------------------------------------------------------------
+"Element nicht gefunden"
+  In der Schrittliste auf "im Tab suchen" - der Roboter umrandet das
+  Element orange, wenn er es findet. Findet er nichts, obwohl die
+  richtige Seite offen ist, den Vorgang neu aufzeichnen.
+
+Der Roboter oeffnet immer denselben Antrag
+  Die Antragsnummer wurde nicht durch einen Platzhalter ersetzt. In der
+  Schrittliste muss {{antrag}} blau hervorgehoben stehen.
+
+Nach dem ersten uebersprungenen Antrag geht nichts mehr
+  Beim Schritt "Zurueck zur Uebersicht" fehlt der Haken
+  "immer ausfuehren".
+
+Ausfuehrlich steht alles in LIESMICH.md.

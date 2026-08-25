@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Übungsportal · Offene Anträge</title>
+<link rel="stylesheet" href="gemeinsam.css">
+</head>
+<body>
+<div class="uebungsband">ÜBUNGSPORTAL — hier wird nichts echt freigegeben</div>
+<header><b>Antragsverwaltung</b><span class="wer"></span></header>
+<main>
+  <div class="karte">
+    <h1>Offene Anträge</h1>
+    <p class="unterzeile">Ein Antrag wird über seine Nummer geöffnet und dort freigegeben.</p>
+    <table>
+      <thead><tr><th>Antrag</th><th>Antragsteller</th><th>Kostenstelle</th>
+                 <th>Betrag</th><th>Status</th></tr></thead>
+      <tbody id="zeilen"></tbody>
+    </table>
+    <button class="zurueck" id="abmelden">Abmelden</button>
+    <button class="zurueck" id="zuruecksetzen">Übung zurücksetzen</button>
+  </div>
+</main>
+<script src="gemeinsam.js"></script>
+<script>
+if (sitzungPruefen()) {
+  kopfZeichnen();
+  const f = freigaben();
+  document.getElementById('zeilen').innerHTML = ANTRAEGE.map(a => `
+    <tr>
+      <td><a href="antrag.html?nr=${a.nr}" data-testid="verweis-${a.nr}">${a.nr}</a></td>
+      <td>${a.wer}</td><td>${a.ks}</td><td>${a.betrag} €</td>
+      <td><span class="marke ${f[a.nr] ? 'frei' : 'offen'}">${f[a.nr] ? 'freigegeben' : 'offen'}</span></td>
+    </tr>`).join('');
+  document.getElementById('abmelden').addEventListener('click', () => {
+    localStorage.removeItem('uebung.sitzung'); location.href = 'index.html';
+  });
+  document.getElementById('zuruecksetzen').addEventListener('click', () => {
+    localStorage.removeItem('uebung.freigaben'); location.reload();
+  });
+}
+</script>
+</body>
+</html>

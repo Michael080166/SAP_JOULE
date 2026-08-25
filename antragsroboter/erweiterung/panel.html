@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Antragsroboter</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<header class="kopf">
+  <div class="marke">
+    <img src="symbole/icon48.png" alt="" width="22" height="22">
+    <span>Antragsroboter</span>
+  </div>
+  <div id="zustandKachel" class="kachel ruhe">bereit</div>
+</header>
+
+<nav class="reiter" role="tablist">
+  <button class="reiterKnopf aktiv" data-ziel="antraege" role="tab">Anträge</button>
+  <button class="reiterKnopf" data-ziel="vorgang"  role="tab">Vorgang</button>
+  <button class="reiterKnopf" data-ziel="lauf"     role="tab">Lauf</button>
+  <button class="reiterKnopf" data-ziel="protokoll" role="tab">Protokoll</button>
+  <button class="reiterKnopf" data-ziel="optionen" role="tab">Optionen</button>
+</nav>
+
+<main>
+
+  <!-- ============================ ANTRÄGE ============================ -->
+  <section id="tab-antraege" class="tafel aktiv">
+
+    <div class="ernte">
+      <b>Aus dem Portal holen</b>
+      <p class="hilfe">Öffne im Browser die <i>Allgemeine Förderfallübersicht</i>
+        und hole die Liste hierher. Das erspart das Abtippen von Aktenzeichen —
+        die häufigste Fehlerquelle im Stapelbetrieb.</p>
+      <div class="knopfreihe">
+        <input type="text" id="ernteStatus" value="gestellt" placeholder="Status">
+        <button id="ernteHolen" class="haupt">Liste holen</button>
+      </div>
+      <div id="ernteHinweis" class="hinweisZeile"></div>
+
+      <div id="ernteBereich" class="versteckt">
+        <label class="feldbez">Woran erkennt der Roboter die Zeile wieder?</label>
+        <select id="ernteKennung"></select>
+        <p class="hilfe">Diese Spalte muss je Zeile eindeutig sein — in WohnWeb
+          ist das üblicherweise das Aktenzeichen. Der Roboter sucht damit später
+          die richtige Zeile in der Übersicht.</p>
+
+        <div class="knopfreihe">
+          <button id="ernteAlle" class="neben klein">Alle</button>
+          <button id="ernteKeine" class="neben klein">Keine</button>
+          <span id="ernteZahl" class="zaehler">0 gewählt</span>
+        </div>
+        <div class="tabellenhuelle" id="ernteListe"></div>
+        <div class="knopfreihe">
+          <button id="ernteUebernehmen" class="haupt">Auswahl übernehmen</button>
+        </div>
+      </div>
+    </div>
+
+    <details class="klappe">
+      <summary>Stattdessen von Hand eingeben</summary>
+    <p class="hilfe">Eine Antragsnummer pro Zeile. Wer mehr Felder braucht, fügt
+      eine CSV mit Kopfzeile ein — jede Spalte wird dann als Platzhalter
+      <code>{{spaltenname}}</code> nutzbar.</p>
+
+    <textarea id="antragsFeld" rows="8" spellcheck="false"
+      placeholder="A-10001&#10;A-10002&#10;A-10003"></textarea>
+
+    <div class="knopfreihe">
+      <button id="antraegeUebernehmen" class="haupt">Liste übernehmen</button>
+      <button id="csvWaehlen" class="neben">CSV-Datei…</button>
+      <input type="file" id="csvDatei" accept=".csv,.txt" hidden>
+    </div>
+    </details>
+
+    <div id="antraegeZusammenfassung" class="zusammenfassung leer">
+      Noch keine Anträge geladen.
+    </div>
+
+    <div class="tabellenhuelle">
+      <table id="antragsTabelle">
+        <thead>
+          <tr><th>#</th><th>Antrag</th><th>Status</th><th>Meldung</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="knopfreihe">
+      <button id="offeneZuruecksetzen" class="neben klein">Fehlerhafte auf „offen“ zurücksetzen</button>
+      <button id="listeLeeren" class="gefahr klein">Liste leeren</button>
+    </div>
+  </section>
+
+  <!-- ============================ VORGANG ============================ -->
+  <section id="tab-vorgang" class="tafel">
+    <div class="stufe">
+      <div class="stufeNr">1</div>
+      <div>
+        <b>Anmelden</b>
+        <p class="hilfe">Melde dich im Portal ganz normal von Hand an. Der Roboter
+          zeichnet Passwörter grundsätzlich nicht auf und braucht sie auch nicht —
+          er arbeitet in deiner angemeldeten Sitzung weiter.</p>
+      </div>
+    </div>
+
+    <div class="stufe">
+      <div class="stufeNr">2</div>
+      <div>
+        <b>Einen Antrag von Hand freigeben</b>
+        <p class="hilfe">Aufnahme starten, dann <i>einen</i> Antrag vollständig
+          bearbeiten. Jeder Klick und jede Eingabe wird zum Rezept.</p>
+        <div class="knopfreihe">
+          <button id="aufnahmeStart" class="haupt">Aufnahme starten</button>
+          <button id="aufnahmeStopp" class="gefahr" disabled>Aufnahme beenden</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stufe">
+      <div class="stufeNr">3</div>
+      <div>
+        <b>Antragsnummer zum Platzhalter machen</b>
+        <p class="hilfe">Welche Antragsnummer hast du eben benutzt? Der Roboter
+          ersetzt sie überall durch <code>{{antrag}}</code> — auch in der Adresse.</p>
+        <div class="knopfreihe">
+          <input type="text" id="beispielwert" placeholder="z. B. A-10001">
+          <button id="platzhalterSetzen" class="neben">Ersetzen</button>
+        </div>
+        <div id="platzhalterErgebnis" class="hinweisZeile"></div>
+      </div>
+    </div>
+
+    <div class="stufe">
+      <div class="stufeNr">4</div>
+      <div>
+        <b>Erfolg erkennbar machen</b>
+        <p class="hilfe">Welcher Text erscheint nach erfolgreicher Freigabe?
+          Ohne dieses Merkmal kann der Roboter Erfolg nicht von Misserfolg
+          unterscheiden. Mehrere Varianten: eine pro Zeile.</p>
+        <label class="feldbez">Erfolgstext</label>
+        <textarea id="erfolgText" rows="2" spellcheck="false"
+          placeholder="Antrag wurde freigegeben"></textarea>
+        <label class="feldbez">Fehlertext (bricht den Antrag sofort ab)</label>
+        <textarea id="fehlerText" rows="2" spellcheck="false"
+          placeholder="Keine Berechtigung&#10;Antrag bereits bearbeitet"></textarea>
+
+        <label class="feldbez">Hinweisfenster wegklicken</label>
+        <textarea id="stoererTexte" rows="2" spellcheck="false"
+          placeholder="Ja, verstanden"></textarea>
+        <p class="hilfe">Beschriftung von Knöpfen, die der Roboter wegklickt,
+          <i>wenn</i> sie auftauchen — eine pro Zeile. In Edge begrüßt WohnWeb
+          jede Anmeldung mit „Ihr Browser wird nicht unterstützt"; dieser Kasten
+          blockiert alles dahinter. Er erscheint nicht zuverlässig und taugt
+          darum nicht als fester Schritt.</p>
+
+        <label class="feldbez">Text der Anmeldeseite (Sitzungsende)</label>
+        <textarea id="sitzungsText" rows="2" spellcheck="false"
+          placeholder="Anmeldung WohnWeb"></textarea>
+        <p class="hilfe">Sieht der Roboter diesen Text während eines Laufs, ist
+          die Sitzung abgelaufen. Er hält dann sofort an, statt blind
+          weiterzuklicken. War die Freigabe noch nicht ausgelöst, bleibt der
+          Antrag <b>offen</b> — nach der Neuanmeldung genügt „Fortsetzen". War
+          sie schon draußen, wird er als <b>unklar</b> vermerkt und muss von
+          Hand nachgesehen werden; der Roboter fasst ihn nicht wieder an.</p>
+      </div>
+    </div>
+
+    <div class="stufe">
+      <div class="stufeNr">5</div>
+      <div>
+        <b>Schlussschritt markieren</b>
+        <p class="hilfe">Hake den Schritt an, der die Freigabe endgültig auslöst.
+          Nur dieser wird im Trockenlauf ausgelassen und nur vor ihm fragt die
+          Einzelbestätigung nach.</p>
+      </div>
+    </div>
+
+    <div class="rezeptKopf">
+      <label class="feldbez">Startadresse je Antrag</label>
+      <input type="text" id="startUrl" spellcheck="false"
+        placeholder="https://portal.example/antrag/{{antrag}}">
+      <p class="hilfe">Leer lassen, wenn jeder Durchlauf auf der aktuellen Seite
+        beginnt (z. B. eine Trefferliste).</p>
+    </div>
+
+    <div class="schritteKopf">
+      <b>Aufgezeichnete Schritte</b>
+      <span id="schrittZahl" class="zaehler">0</span>
+    </div>
+    <ol id="schrittListe" class="schritte"></ol>
+
+    <details class="klappe" id="schrittNeu">
+      <summary>Schritt von Hand ergänzen</summary>
+      <p class="hilfe">Manche Schritte kann die Aufnahme nicht mitschneiden —
+        „prüfe, ob dieses Feld grün ist" ist kein Klick. Solche Schritte
+        werden hier ergänzt.</p>
+
+      <label class="feldbez">Was soll geschehen?</label>
+      <select id="neuAktion">
+        <option value="vorbedingung">Vorbedingung — nur weitermachen, wenn Haken/grün</option>
+        <option value="zurueck">Zurück — eine Seite im Browserverlauf zurück</option>
+        <option value="zeileKlicken">Zeile anklicken — Zeile mit dieser Kennung in der Liste</option>
+        <option value="warteText">Auf Text warten — bis dieser Text erscheint</option>
+        <option value="warteElement">Auf Element warten — bis es da ist</option>
+        <option value="klick">Klick</option>
+        <option value="eingabe">Text eintragen</option>
+        <option value="auswahl">Auswahlfeld setzen</option>
+        <option value="haken">Häkchen setzen</option>
+        <option value="taste">Taste drücken</option>
+        <option value="pause">Feste Wartezeit (ms)</option>
+      </select>
+
+      <div id="neuZielBereich">
+        <label class="feldbez">Auf welches Element?</label>
+        <div class="knopfreihe">
+          <button id="neuElementWaehlen" class="neben">Im Tab anklicken…</button>
+          <span id="neuElementInfo" class="hinweisZeile"></span>
+        </div>
+      </div>
+
+      <div id="neuWertBereich">
+        <label class="feldbez" id="neuWertBez">Wert</label>
+        <input type="text" id="neuWert" spellcheck="false">
+      </div>
+
+      <label class="feldbez">Beschriftung im Protokoll</label>
+      <input type="text" id="neuBeschriftung" placeholder="z. B. Finanzierung">
+
+      <label class="schalter" style="margin-top:10px">
+        <input type="checkbox" id="neuImmer">
+        <span><b>immer ausführen</b><br>
+          <small>Läuft auch dann, wenn der Antrag vorher ausgelassen wurde oder
+          scheiterte. Für den Rückweg zur Liste unverzichtbar — sonst bleibt der
+          Roboter beim ersten ausgelassenen Antrag stehen.</small></span>
+      </label>
+      <label class="schalter">
+        <input type="checkbox" id="neuNavigiert">
+        <span><b>wechselt die Seite</b><br>
+          <small>Nach diesem Schritt lädt eine neue Seite. Der Roboter wartet
+          dann darauf, statt sofort weiterzumachen.</small></span>
+      </label>
+
+      <label class="feldbez">Einfügen</label>
+      <select id="neuPosition"></select>
+
+      <div class="knopfreihe">
+        <button id="neuHinzufuegen" class="haupt">Schritt hinzufügen</button>
+      </div>
+      <div id="neuHinweis" class="hinweisZeile"></div>
+    </details>
+
+    <div class="knopfreihe">
+      <button id="rezeptSichern" class="neben klein">Rezept als Datei sichern</button>
+      <button id="rezeptLadenKnopf" class="neben klein">Rezept laden…</button>
+      <input type="file" id="rezeptDatei" accept=".json" hidden>
+      <button id="rezeptLeeren" class="gefahr klein">Rezept verwerfen</button>
+    </div>
+  </section>
+
+  <!-- ============================== LAUF ============================== -->
+  <section id="tab-lauf" class="tafel">
+    <div id="laufWarnung" class="warnung versteckt"></div>
+
+    <div class="fortschrittHuelle">
+      <div id="fortschrittBalken" class="fortschritt"></div>
+    </div>
+    <div id="fortschrittText" class="fortschrittText">0 von 0</div>
+
+    <div class="zaehlerreihe">
+      <div class="zahlkachel ok"><span id="zahlOk">0</span><small>erledigt</small></div>
+      <div class="zahlkachel fehler"><span id="zahlFehler">0</span><small>Fehler</small></div>
+      <div class="zahlkachel neutral"><span id="zahlOffen">0</span><small>offen</small></div>
+    </div>
+    <div id="unklarWarnung" class="warnung schwer versteckt"></div>
+
+    <div id="aktuellerAntrag" class="aktuell versteckt"></div>
+
+    <div class="knopfreihe gross">
+      <button id="laufStart" class="haupt gross">Lauf starten</button>
+      <button id="laufPause" class="neben" disabled>Pause</button>
+      <button id="laufStopp" class="gefahr" disabled>Stopp</button>
+    </div>
+    <div class="knopfreihe">
+      <button id="laufFortsetzen" class="haupt klein versteckt">Fortsetzen</button>
+      <button id="laufNurOffene" class="neben klein">Nur offene abarbeiten</button>
+    </div>
+
+    <div class="pruefliste">
+      <div class="pruefzeile" id="pruefRezept"><span class="haken">–</span> Vorgang aufgezeichnet</div>
+      <div class="pruefzeile" id="pruefAntraege"><span class="haken">–</span> Anträge geladen</div>
+      <div class="pruefzeile" id="pruefEndgueltig"><span class="haken">–</span> Schlussschritt markiert</div>
+      <div class="pruefzeile" id="pruefErfolg"><span class="haken">–</span> Erfolgstext gesetzt</div>
+      <div class="pruefzeile" id="pruefProbe"><span class="haken">–</span> Trockenlauf gemacht</div>
+    </div>
+  </section>
+
+  <!-- =========================== PROTOKOLL =========================== -->
+  <section id="tab-protokoll" class="tafel">
+    <p class="hilfe">Das Antragsprotokoll ist der Nachweis: eine Zeile je Antrag
+      mit Zeitstempel, Ergebnis und Meldung. Der Schritt-Verlauf darunter dient
+      der Fehlersuche.</p>
+    <div class="knopfreihe">
+      <button id="csvAntraege" class="haupt">Antragsprotokoll als CSV</button>
+      <button id="csvVerlauf" class="neben">Schritt-Verlauf als CSV</button>
+    </div>
+    <div class="knopfreihe">
+      <button id="protokollLeeren" class="gefahr klein">Schritt-Verlauf leeren</button>
+    </div>
+    <div id="verlauf" class="verlauf"></div>
+  </section>
+
+  <!-- =========================== OPTIONEN ============================ -->
+  <section id="tab-optionen" class="tafel">
+    <label class="schalter">
+      <input type="checkbox" id="optTrockenlauf">
+      <span><b>Trockenlauf</b><br>
+        <small>Alles wird durchgespielt, nur der als endgültig markierte Schritt
+        nicht. Zum gefahrlosen Prüfen des Rezepts an echten Anträgen.</small></span>
+    </label>
+
+    <label class="schalter">
+      <input type="checkbox" id="optEinzel" checked>
+      <span><b>Einzelbestätigung</b><br>
+        <small>Hält vor jeder endgültigen Freigabe an und fragt nach. Sicher,
+        aber bei hunderten Anträgen langsam.</small></span>
+    </label>
+
+    <label class="feldbez">Notbremse: anhalten nach … Fehlern nacheinander</label>
+    <input type="number" id="optMaxFehler" min="1" max="99" value="3">
+    <p class="hilfe">Fängt den Fall ab, dass sich das Portal ändert oder die
+      Sitzung abläuft — statt hunderte Anträge falsch zu verarbeiten.</p>
+
+    <label class="feldbez">Pause zwischen Schritten (ms)</label>
+    <input type="number" id="optPauseSchritt" min="0" max="10000" step="50" value="250">
+
+    <label class="feldbez">Pause zwischen Anträgen (ms)</label>
+    <input type="number" id="optPauseAntrag" min="0" max="60000" step="100" value="800">
+
+    <label class="feldbez">Wartezeit nach Seitenaufbau (ms)</label>
+    <input type="number" id="optPauseSeite" min="0" max="30000" step="100" value="400">
+
+    <label class="feldbez">Zeitlimit ohne Rückmeldung (ms)</label>
+    <input type="number" id="optHang" min="10000" max="600000" step="5000" value="90000">
+    <p class="hilfe">Danach gilt der Antrag als hängend, wird als Fehler
+      vermerkt und der Roboter geht zum nächsten.</p>
+
+    <div class="knopfreihe">
+      <button id="optionenSichern" class="haupt">Optionen speichern</button>
+    </div>
+    <div id="optionenHinweis" class="hinweisZeile"></div>
+  </section>
+
+</main>
+
+<footer class="fuss">
+  <span id="fussText">läuft lokal · nichts verlässt diesen Rechner</span>
+</footer>
+
+<script src="panel.js"></script>
+</body>
+</html>

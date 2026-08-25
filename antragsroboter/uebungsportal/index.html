@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Übungsportal · Anmeldung</title>
+<link rel="stylesheet" href="gemeinsam.css">
+</head>
+<body>
+<div class="uebungsband">ÜBUNGSPORTAL — hier wird nichts echt freigegeben</div>
+<header><b>Antragsverwaltung</b><span class="wer"></span></header>
+<main>
+  <div class="karte">
+    <h1>Anmeldung</h1>
+    <p class="unterzeile">Beliebige Eingaben werden angenommen. Der Roboter
+      zeichnet dieses Formular bewusst nicht auf.</p>
+    <form id="anmeldung">
+      <label for="benutzer">Benutzerkennung</label>
+      <input type="text" id="benutzer" name="benutzer" value="p.bearbeiter" autocomplete="username">
+      <label for="kennwort">Kennwort</label>
+      <input type="password" id="kennwort" name="kennwort" value="geheim" autocomplete="current-password">
+      <button type="submit" class="haupt">Anmelden</button>
+    </form>
+  </div>
+</main>
+<script src="gemeinsam.js"></script>
+<script>
+kopfZeichnen();
+document.getElementById('anmeldung').addEventListener('submit', ev => {
+  ev.preventDefault();
+  localStorage.setItem('uebung.sitzung', 'ja');
+  location.href = 'liste.html';
+});
+</script>
+</body>
+</html>

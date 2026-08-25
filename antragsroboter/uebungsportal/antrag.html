@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Übungsportal · Antrag</title>
+<link rel="stylesheet" href="gemeinsam.css">
+</head>
+<body>
+<div class="uebungsband">ÜBUNGSPORTAL — hier wird nichts echt freigegeben</div>
+<header><b>Antragsverwaltung</b><span class="wer"></span></header>
+<main>
+  <div class="karte" id="inhalt"></div>
+</main>
+<script src="gemeinsam.js"></script>
+<script>
+if (sitzungPruefen()) {
+  kopfZeichnen();
+  const nr = parameter('nr');
+  const a = ANTRAEGE.find(x => x.nr === nr);
+  const kasten = document.getElementById('inhalt');
+
+  if (!a) {
+    kasten.innerHTML = `<div class="fehler">Antrag ${nr || '(ohne Nummer)'} ist nicht vorhanden.</div>
+      <button class="zurueck" onclick="location.href='liste.html'">Zur Liste</button>`;
+  } else if (freigaben()[nr]) {
+    kasten.innerHTML = `<h1>Antrag ${a.nr}</h1>
+      <div class="fehler">Antrag bereits bearbeitet.</div>
+      <button class="zurueck" onclick="location.href='liste.html'">Zur Liste</button>`;
+  } else {
+    kasten.innerHTML = `
+      <h1>Antrag ${a.nr}</h1>
+      <p class="unterzeile">Prüfung und Freigabe</p>
+      <dl class="feldpaar">
+        <dt>Antragsteller</dt><dd>${a.wer}</dd>
+        <dt>Kostenstelle</dt><dd>${a.ks}</dd>
+        <dt>Betrag</dt><dd>${a.betrag} €</dd>
+      </dl>
+      <label for="vermerk">Prüfvermerk</label>
+      <textarea id="vermerk" name="vermerk" rows="3"
+        placeholder="Begründung der Entscheidung"></textarea>
+      <label for="grund">Freigabegrund</label>
+      <select id="grund" name="grund">
+        <option value="">— bitte wählen —</option>
+        <option value="regulaer">Regulär im Budget</option>
+        <option value="ausnahme">Ausnahme genehmigt</option>
+        <option value="nachtrag">Nachtragsbewilligung</option>
+      </select>
+      <div class="haken">
+        <input type="checkbox" id="sachlich" name="sachlich">
+        <label for="sachlich">Sachlich und rechnerisch richtig</label>
+      </div>
+      <button class="freigabe" id="freigeben" data-testid="knopf-freigeben" disabled>Freigeben</button>
+      <button class="zurueck" onclick="location.href='liste.html'">Abbrechen</button>`;
+
+    const vermerk  = document.getElementById('vermerk');
+    const grund    = document.getElementById('grund');
+    const sachlich = document.getElementById('sachlich');
+    const knopf    = document.getElementById('freigeben');
+
+    // Der Knopf wird erst frei, wenn alles ausgefuellt ist - so verhalten sich
+    // echte Portale, und genau daran scheitern schlecht gebaute Roboter.
+    const pruefen = () => {
+      knopf.disabled = !(vermerk.value.trim() && grund.value && sachlich.checked);
+    };
+    [vermerk, grund, sachlich].forEach(e => {
+      e.addEventListener('input', pruefen);
+      e.addEventListener('change', pruefen);
+    });
+
+    knopf.addEventListener('click', () => {
+      knopf.disabled = true;
+      knopf.textContent = 'wird verarbeitet …';
+      // Kurze Verzoegerung wie bei einem echten Server
+      setTimeout(() => {
+        freigeben(nr, vermerk.value);
+        location.href = 'erfolg.html?nr=' + encodeURIComponent(nr);
+      }, 400);
+    });
+  }
+}
+</script>
+</body>
+</html>

@@ -46,3 +46,12 @@ target/
 # Misc
 tmp/
 .cache/
+
+# Zwischenordner beim Paketbau
+paket/
+
+# Antragsroboter.zip liegt bewusst IM Repo, obwohl es eine gebaute Datei ist:
+# die Actions-Artefakte kommen von *.actions.githubusercontent.com, und dieser
+# Host ist im Zielnetz gesperrt. github.com selbst ist erreichbar. Ohne die
+# eingecheckte Fassung gaebe es dort keinen Weg an das Paket.
+# Beim Aendern der Erweiterung neu bauen - siehe LIESMICH.md, "Paket bauen".

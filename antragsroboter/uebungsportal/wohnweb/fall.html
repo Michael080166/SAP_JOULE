@@ -1,0 +1,131 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Übung · Förderfall bearbeiten</title>
+<link rel="stylesheet" href="stil.css"></head><body>
+<div id="kopf"></div>
+<div class="werkzeugleiste">
+  <span style="color:#46586f;font-size:13px">&#10003; Gespeichert</span>
+  <button id="einleiten" data-testid="pruefung-einleiten">Prüfung NRW.BANK einleiten</button>
+  <button>&hellip; Aktionen</button>
+</div>
+<main><div id="inhalt"></div></main>
+
+<script src="daten.js"></script>
+<script>
+if (sitzungPruefen()) {
+  document.getElementById('kopf').innerHTML = kopf('uebersicht.html');
+  kopfBeleben();
+
+  const b  = bestand();
+  const id = parameter('id');
+  const f  = b.find(x => x.id === id);
+  const inhalt = document.getElementById('inhalt');
+
+  if (!f) {
+    inhalt.innerHTML = '<div class="karte">Förderfall ist nicht vorhanden.</div>';
+    document.getElementById('einleiten').disabled = true;
+  } else {
+    const marke = w => w === 'ok'
+      ? '<span class="zeichen">&#10003;</span>'
+      : '<span class="zeichen">&#10007;</span>';
+
+    inhalt.innerHTML = `
+      <div class="fall">
+        <div class="karte formular">
+          <p style="color:#46586f;font-size:13px">Mit * gekennzeichnete Felder müssen ausgefüllt werden.</p>
+          <label for="titel">Titel*</label>
+          <select id="titel"><option>Keine Angabe</option><option>Dr.</option></select>
+          <label for="nachname">Nachname*</label>
+          <input type="text" id="nachname" value="${f.aktenzeichen.replace('XY ', '')}">
+          <label for="staat">Staatsangehörigkeit (Land)</label>
+          <select id="staat"><option>Deutschland</option><option>Österreich</option></select>
+          <label for="ort">Ort</label>
+          <input type="text" id="ort" value="${f.ort}">
+        </div>
+
+        <div class="seitenleiste">
+          <dl>
+            <dt>Erste antragstellende Person</dt><dd>${f.name}</dd>
+            <dt>Vorgangstyp</dt><dd>${f.vorgangstyp}</dd>
+            <dt>Status</dt><dd><span class="statusmarke" id="statusmarke">${f.status.toUpperCase()}</span></dd>
+            <dt>Aktenzeichen</dt><dd>${f.aktenzeichen}</dd>
+            <dt>Förderbaustein</dt><dd>Mietwohnraumförderung</dd>
+            <dt>Finanzierungslücke</dt><dd>0,00 €</dd>
+          </dl>
+          <!-- Die zwei Pruefmerkmale: Haken und gruen heisst in Ordnung,
+               Kreuz und rot heisst nicht. Genau wie im Original unten rechts. -->
+          <div class="merkmale">
+            <div class="merkmal ${f.finanzierung}"   data-testid="merkmal-finanzierung">
+              ${marke(f.finanzierung)}Finanzierung</div>
+            <div class="merkmal ${f.detailpruefbar}" data-testid="merkmal-detailpruefbarkeit">
+              ${marke(f.detailpruefbar)}Detailprüfbarkeit</div>
+          </div>
+        </div>
+      </div>`;
+
+    if (f.status !== 'gestellt') {
+      inhalt.insertAdjacentHTML('afterbegin',
+        '<div class="kasten" style="background:#fde4e4;color:#9f1239">' +
+        'Für diesen Vorgang ist keine Prüfung einzuleiten.</div>');
+    }
+
+    // ---- Dialog "Prüfung NRW.BANK einleiten" ----
+    document.getElementById('einleiten').addEventListener('click', () => {
+      const decke = document.createElement('div');
+      decke.className = 'decke';
+      decke.innerHTML = `
+        <div class="dialog" role="dialog" aria-modal="true">
+          <h2>Prüfung NRW.BANK einleiten</h2>
+          <p style="font-size:13px">Mit * gekennzeichnete Felder müssen ausgefüllt werden.</p>
+          <p style="font-size:13px">Durch diese Aktion leiten Sie die Prüfung der NRW.BANK ein.</p>
+          <p style="font-weight:600;font-size:13px;margin-bottom:4px">Datenübermittlung</p>
+          <label style="font-size:13px;display:flex;gap:9px;align-items:center">
+            <input type="checkbox" id="ohneUebermittlung" name="ohneUebermittlung">
+            Statuswechsel nur innerhalb des WohnWebs ohne Datenübermittlung an die NRW.BANK
+          </label>
+          <div class="merksatz">Bitte geben Sie der NRW.BANK im Freitextfeld ergänzende
+            Informationen mit, insbesondere zur grundsätzlichen förderrechtlichen
+            Realisierungschance des Fördervorhabens.</div>
+          <label for="freitext" style="font-size:13px;font-weight:600">
+            Ergänzende Informationen für die NRW.BANK *</label>
+          <textarea id="freitext" name="freitext" maxlength="500"></textarea>
+          <div class="zaehler" id="zaehler">0 / 500</div>
+          <div class="fuss">
+            <button class="abbrechen" id="abbrechen">&#10007; Abbrechen</button>
+            <button class="senden" id="senden" data-testid="dialog-senden" disabled>
+              &#10003; Prüfung NRW.BANK einleiten</button>
+          </div>
+        </div>`;
+      document.body.appendChild(decke);
+
+      const txt    = decke.querySelector('#freitext');
+      const senden = decke.querySelector('#senden');
+      // Der Knopf gibt erst frei, wenn das Pflichtfeld befuellt ist.
+      txt.addEventListener('input', () => {
+        decke.querySelector('#zaehler').textContent = `${txt.value.length} / 500`;
+        senden.disabled = txt.value.trim().length === 0;
+      });
+      decke.querySelector('#abbrechen').addEventListener('click', () => decke.remove());
+
+      senden.addEventListener('click', () => {
+        senden.disabled = true;
+        senden.textContent = 'wird verarbeitet …';
+        setTimeout(() => {
+          const alle = bestand();
+          const eintrag = alle.find(x => x.id === id);
+          eintrag.status = 'Prüfung NRW.BANK eingeleitet';
+          eintrag.freitext = txt.value;
+          eintrag.ohneUebermittlung = decke.querySelector('#ohneUebermittlung').checked;
+          speichern(alle);
+          decke.remove();
+          // Der Dialog schliesst sich, die Seite bleibt stehen und zeigt die
+          // Bestaetigung. Zurueck geht es ueber den Browser-Zurueck-Knopf.
+          document.getElementById('statusmarke').textContent = 'PRÜFUNG NRW.BANK EINGELEITET';
+          document.getElementById('einleiten').disabled = true;
+          document.getElementById('inhalt').insertAdjacentHTML('afterbegin',
+            '<div class="kasten gut" id="bestaetigung">Prüfung der NRW.BANK wurde eingeleitet.</div>');
+        }, 400);
+      });
+    });
+  }
+}
+</script></body></html>
