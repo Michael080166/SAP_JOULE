@@ -380,6 +380,45 @@ Adresse, z. B. `https://portal.example/*`.
 
 ---
 
+## Das fertige Paket herunterladen
+
+Im Wurzelverzeichnis des Repos liegt **`Antragsroboter.zip`** — das versand-
+fertige Paket, gebaut aus dem jeweils aktuellen Stand.
+
+Direkt im Browser:
+
+```
+https://github.com/Michael080166/SAP_JOULE/blob/claude/antragsfreigabe-roboter-c4smi7/Antragsroboter.zip
+```
+
+Dort auf **Download raw file** klicken.
+
+> **Warum eine gebaute Datei im Repo liegt.** Normalerweise gehört so etwas
+> nicht in die Versionsverwaltung — sie muss bei jeder Änderung von Hand
+> nachgezogen werden, und man sieht ihr nicht an, ob sie noch zum Quelltext
+> passt. Hier überwiegt ein praktischer Grund: Die Actions-Artefakte werden von
+> `*.actions.githubusercontent.com` ausgeliefert, und dieser Host ist im
+> Zielnetz gesperrt. `github.com` selbst ist erreichbar. Ohne die eingecheckte
+> Fassung käme dort niemand an das Paket.
+
+### Paket neu bauen
+
+Nach Änderungen an `erweiterung/` gehört die ZIP neu gebaut, sonst weicht sie
+vom Quelltext ab:
+
+```bash
+cd antragsroboter
+rm -rf /tmp/paket && mkdir -p /tmp/paket/Antragsroboter
+cp -r erweiterung uebungsportal /tmp/paket/Antragsroboter/
+cp LIESMICH.md beispiel-antraege.csv Antragsroboter-starten.cmd \
+   START-HIER.txt /tmp/paket/Antragsroboter/
+(cd /tmp/paket && zip -r -9 ../Antragsroboter.zip Antragsroboter)
+mv /tmp/Antragsroboter.zip ../Antragsroboter.zip
+```
+
+Unter Windows genügt: Ordner mit den sechs Einträgen zusammenstellen,
+Rechtsklick → *Senden an* → *ZIP-komprimierter Ordner*.
+
 ## Braucht es sonst noch etwas?
 
 **Nein.** Keine Installation, kein Python, kein Node, kein npm, keine
