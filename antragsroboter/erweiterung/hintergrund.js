@@ -183,6 +183,16 @@ async function laufStarten(tabId, nurOffene) {
     });
   });
   wachhundStellen();
+
+  // Zwischenspeicher verwerfen, bevor es losgeht.
+  //
+  // Der Puffer wird von chrome.storage.onChanged geleert, und diese Meldung
+  // trifft asynchron ein. Startet der Lauf genau in diesem Fenster, koennte
+  // naechsterAntrag() noch den Stand von vor dem Zuruecksetzen sehen und zu
+  // dem Schluss kommen, es gebe nichts zu tun - der Lauf endete sofort mit
+  // "0 erledigt". Beobachtet: einmal in etwa acht Durchlaeufen. Harmlos in
+  // der Wirkung, aber unerklaerlich fuer den Bediener.
+  puffer = null;
   await naechsterAntrag();
 }
 
@@ -758,9 +768,48 @@ chrome.tabs.onRemoved.addListener(async geschlossen => {
 
 chrome.storage.onChanged.addListener(() => { puffer = null; });
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
-});
-chrome.runtime.onStartup?.addListener(() => {
-  chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+/* -------------------------------------------------------------------- *
+ * Bedienfeld oeffnen - mit Rueckfallweg                                 *
+ * -------------------------------------------------------------------- *
+ * Bevorzugt wird die Seitenleiste: sie steht neben dem Portal, ohne es
+ * zu verdecken. Nicht jeder Chromium-Browser bietet sie an - Edge hat
+ * dafuer laenger einen eigenen Weg gehabt.
+ *
+ * Fehlt sie, darf das Bedienfeld nicht einfach unerreichbar sein. Dann
+ * oeffnet ein Klick auf das Symbol es als eigenes schmales Fenster, das
+ * sich genauso neben das Portal stellen laesst.
+ */
+function seitenleisteEinrichten() {
+  chrome.sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: true })
+    .catch(() => { /* Browser ohne Seitenleiste - der Klick greift unten */ });
+}
+
+chrome.runtime.onInstalled.addListener(seitenleisteEinrichten);
+chrome.runtime.onStartup?.addListener(seitenleisteEinrichten);
+
+// Der Zuhörer wird bedingungslos angemeldet. Trägt die Seitenleiste, fängt
+// sie den Klick ab und dieser Block läuft nie - stört also nicht. Fehlt sie,
+// ist er der einzige Weg ins Bedienfeld.
+chrome.action.onClicked.addListener(async tab => {
+  // Zweiter Versuch über die Seitenleiste, falls sie doch da ist.
+  try {
+    if (chrome.sidePanel?.open) {
+      await chrome.sidePanel.open({ windowId: tab.windowId });
+      return;
+    }
+  } catch (e) { /* dann eben als Fenster */ }
+
+  // Steht das Bedienfeld schon irgendwo offen? Dann dorthin, statt ein
+  // zweites zu öffnen - zwei Bedienfelder nebeneinander verwirren nur.
+  const adresse = chrome.runtime.getURL('panel.html');
+  const offen = await chrome.tabs.query({ url: adresse });
+  if (offen.length) {
+    await chrome.windows.update(offen[0].windowId, { focused: true });
+    await chrome.tabs.update(offen[0].id, { active: true });
+    return;
+  }
+
+  await chrome.windows.create({
+    url: adresse, type: 'popup', width: 460, height: 940, focused: true
+  });
 });
