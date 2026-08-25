@@ -46,3 +46,7 @@ target/
 # Misc
 tmp/
 .cache/
+
+# Versandpaket - wird gebaut, nicht gepflegt (siehe .github/workflows/pruefungen.yml)
+Antragsroboter.zip
+paket/
